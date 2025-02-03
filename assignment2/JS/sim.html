@@ -93,8 +93,12 @@
         // define mouse
         var mouse = { x: 0, y: 0};
 
-        c.moveTo(0, 0);
-        c.lineTo(100, 100);
+        c.moveTo(10, displayHeight);
+        c.lineTo(displayWidth, displayHeight);
+        c.stroke();
+        
+        c.moveTo(10, 10);
+        c.lineTo(10, displayHeight);
         c.stroke();
 
         function getMousePos(canvas, evt) {
