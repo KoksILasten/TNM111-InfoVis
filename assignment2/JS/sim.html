@@ -1,366 +1,411 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Canvas Template</title>
     <meta charset="utf-8" />
     <title>TNM111 InfoVis Assignment 2</title>
     <meta name="description" content="Particle sim" />
-</head>
-<body>
+  </head>
+  <body>
     <style>
-        body{
-            background-color: blueviolet;
-            overflow: hidden;
-        }
-        body, canvas {
-            border: 0;
-            margin: 0;
-            padding: 0;
-        }
-        #simCanvas{
-            background-color: rgb(255, 255, 255);
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
-        }
-        button{
-            position:static;
-            top: 10px;
-            left: 10px;  
-        }
+      body {
+        background-color: blueviolet;
+        overflow: hidden;
+      }
+      body,
+      canvas {
+        border: 0;
+        margin: 0;
+        padding: 0;
+      }
+      #simCanvas {
+        background-color: rgb(255, 255, 255);
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+      }
+      button {
+        position: static;
+        top: 10px;
+        left: 10px;
+      }
     </style>
-    <input type="file" id="fileInput" accept=".csv" />
-    <button id="dataPointspawn">Spawn Data Points</button>
+
     <script>
-        
-        window.addEventListener('DOMContentLoaded', () => {
+      window.addEventListener("DOMContentLoaded", () => {
         // Define constants
 
-        window.onresize = function () { location.reload(); }
+        window.onresize = function () {
+          //location.reload();
+        };
         const FPS = 60;
-        const h = 10/FPS; 
+        const h = 10 / FPS;
         let tfCanvas = document.querySelector("#simCanvas");
         var c = tfCanvas.getContext("2d");
 
-        
         // handle canvas size
-        var displayWidth = window.innerWidth;
-        var displayHeight = window.innerHeight;
-        var scale = 2;
-        tfCanvas.style.width = displayWidth + 'px';
-        tfCanvas.style.height = displayHeight + 'px';
+        //var displayWidth = window.innerWidth;
+        var displayWidth = 1000;
+        //var displayHeight = window.innerHeight;
+        var displayHeight = 1000;
+        var scale = 1;
+        tfCanvas.style.width = displayWidth + "px";
+        tfCanvas.style.height = displayHeight + "px";
         tfCanvas.width = displayWidth * scale;
         tfCanvas.height = displayHeight * scale;
+        var Origin = { x: displayWidth / 2, y: displayHeight / 2 };
 
         // define mouse
-        var mouse = { x: 0, y: 0};
+        var mouse = { x: 0, y: 0 };
 
-        c.lineWidth = 5;
-        c.moveTo(10, displayHeight);
-        c.lineTo(displayWidth * 2 - 20, displayHeight);
+        c.lineWidth = 4;
+        c.moveTo(0, Origin.x);
+        c.lineTo(Origin.y * 2, Origin.y);
         c.stroke();
-        
-        c.moveTo(displayWidth, 10);
-        c.lineTo(displayWidth, (displayHeight * 2) - 50);
+
+        c.moveTo(Origin.y, 0);
+        c.lineTo(Origin.x, Origin.x * 2);
         c.stroke();
-        c.lineWidth = .5;
+        c.lineWidth = 0.5;
 
         function getMousePos(canvas, evt) {
-            var rect = canvas.getBoundingClientRect();
-            return {
-                x: evt.clientX - rect.left,
-                y: evt.clientY - rect.top
-            };
+          var rect = canvas.getBoundingClientRect();
+          return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top,
+          };
         }
 
-        window.addEventListener('mousemove', function (e) {
+        window.addEventListener(
+          "mousemove",
+          function (e) {
             var mousePos = getMousePos(tfCanvas, e);
 
             mouse.x = mousePos.x * scale;
             mouse.y = mousePos.y * scale;
-        }, false);
+          },
+          false
+        );
 
-        window.addEventListener('mousedown', function (e) {
+        window.addEventListener(
+          "mousedown",
+          function (e) {
             var mousePos = getMousePos(tfCanvas, e);
 
             mouse.x = mousePos.x * scale;
             mouse.y = mousePos.y * scale;
+
             //console.log(mouse);
 
             if (e.buttons == 1) {
-                //dragBallInterval = setInterval(dragBalls, FPS);
+              //dragBallInterval = setInterval(dragBalls, FPS);
             }
-        }, false);
+          },
+          false
+        );
 
-        window.addEventListener('mouseup', function (e) {
+        window.addEventListener(
+          "mouseup",
+          function (e) {
             if (!(e.buttons == 1)) {
-                //clearInterval(dragBallInterval);
+              //clearInterval(dragBallInterval);
             }
-        }, false);
+          },
+          false
+        );
 
         var arrayOfRainbowColors = [
-            "ff0000",
-            "ffa500",
-            "ffff00",
-            "008000",
-            "0000ff",
-            "4b0082",
-            "ee82ee"
+          "ff0000",
+          "ffa500",
+          "ffff00",
+          "008000",
+          "0000ff",
+          "4b0082",
+          "ee82ee",
         ];
 
         function hexToRgb(hex) {
-            var r = parseInt(hex.substring(0, 2), 16);
-            var g = parseInt(hex.substring(2, 4), 16);
-            var b = parseInt(hex.substring(4, 6), 16);
-            return "rgb(" + r + ", " + g + ", " + b + ")";
+          var r = parseInt(hex.substring(0, 2), 16);
+          var g = parseInt(hex.substring(2, 4), 16);
+          var b = parseInt(hex.substring(4, 6), 16);
+          return "rgb(" + r + ", " + g + ", " + b + ")";
         }
 
         function getNextColor() {
-            let color = arrayOfRainbowColors.shift();
-            arrayOfRainbowColors.push(color);
-            return color;
+          let color = arrayOfRainbowColors.shift();
+          arrayOfRainbowColors.push(color);
+          return color;
         }
 
         dataPoints = [];
         class DataPoint {
-            constructor(x, y, name, radius, color) {
-                this.x = x;
-                this.y = y;
-                this.name = name;
-                this.radius = radius;
-                this.color = color;
-            }
+          constructor(x, y, name, radius, color) {
+            this.x = x;
+            this.y = y;
+            this.originalX = x;
+            this.originalY = y;
+            this.name = name;
+            this.radius = radius;
+            this.color = color;
+          }
 
-            draw = function () {
-                c.beginPath();
-                switch (this.name) {
-                    case "a\r":
-                    case "a":
-                    case "foo":
-                        c.fillStyle = hexToRgb("ff0000");
-                        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                        break;
-                    case "b\r":
-                    case "b":
-                        case "bar":
-                        c.fillStyle = hexToRgb("ee82ee");
-                        c.fillRect(this.x, this.y, Math.PI * 6, Math.PI * 6);
-                        c.strokeRect(this.x, this.y, Math.PI * 6, Math.PI * 6);
-                        break;
-                    case "c\r":
-                    case "c":
-                    case "baz":
-                        c.fillStyle = hexToRgb("0000ff");
-                        c.moveTo(this.x, this.y-10);
-                        c.lineTo(this.x -15, this.y+15);
-                        c.lineTo(this.x +15, this.y+15);
-                        break;
+          draw = function () {
+            c.beginPath();
+            switch (this.name) {
+              case "a\r":
+              case "a":
+              case "foo":
+                c.fillStyle = hexToRgb("ff0000");
+                c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                break;
+              case "b\r":
+              case "b":
+              case "bar":
+                c.fillStyle = hexToRgb("ee82ee");
+                let offset = 9;
+                c.fillRect(
+                  this.x - offset,
+                  this.y - offset,
+                  Math.PI * 6,
+                  Math.PI * 6
+                );
+                c.strokeRect(
+                  this.x - offset,
+                  this.y - offset,
+                  Math.PI * 6,
+                  Math.PI * 6
+                );
+                break;
+              case "c\r":
+              case "c":
+              case "baz":
+                c.fillStyle = hexToRgb("0000ff");
+                c.moveTo(this.x, this.y - 10);
+                c.lineTo(this.x - 15, this.y + 15);
+                c.lineTo(this.x + 15, this.y + 15);
+                break;
 
-                    default:
-                        //c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                        //c.fillStyle = hexToRgb(this.color);
-                        alert("Invalid data point name: " + this.name);
-                        break;
-                }
-                c.fill();
-                c.stroke();
+              default:
+                //c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                //c.fillStyle = hexToRgb(this.color);
+                alert("Invalid data point name: " + this.name);
+                break;
             }
+            c.fill();
+            c.stroke();
+          };
 
-            update = function () {
-                this.draw();
-            }
+          update = function () {
+            this.draw();
+          };
         }
 
         let btn = document.querySelector("#dataPointspawn");
-         btn.addEventListener("click", function () {
-            for (let i = 0; i < dataPoints.length; i++) {
-                dataPoints[i].draw();
-            }
+        btn.addEventListener("click", function () {
+          for (let i = 0; i < dataPoints.length; i++) {
+            dataPoints[i].draw();
+          }
+
+          rutnat();
+          console.log(Origin.x, Origin.y);
         });
 
-
-
-        document.getElementById('fileInput').addEventListener('change', function(event) {
+        document
+          .getElementById("fileInput")
+          .addEventListener("change", function (event) {
             const file = event.target.files[0];
             var color = getNextColor();
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const content = e.target.result;
-                    let lines = content.trim().split('\n');
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                const content = e.target.result;
+                let lines = content.trim().split("\n");
 
-                    //seperate on comma and add to dataPoints
-                    for (let i = 0; i < lines.length; i++) {
-                        lines[i] = lines[i].split(',');
-                        let dataPoint = new DataPoint(parseFloat(lines[i][0]), parseFloat(lines[i][1]), lines[i][2], 10, color);
-                        dataPoints.push(dataPoint);
-                        console.log(dataPoint.x, dataPoint.y, dataPoint.name);
-                    }
-                    preprocessing();
-                };
-                reader.readAsText(file);
+                //seperate on comma and add to dataPoints
+                for (let i = 0; i < lines.length; i++) {
+                  lines[i] = lines[i].split(",");
+                  let dataPoint = new DataPoint(
+                    parseFloat(lines[i][0]),
+                    parseFloat(lines[i][1]),
+                    lines[i][2],
+                    10,
+                    color
+                  );
+                  dataPoints.push(dataPoint);
+                  console.log(dataPoint.x, dataPoint.y, dataPoint.name);
+                }
+                preprocessing();
+              };
+              reader.readAsText(file);
             }
-        });
+          });
 
-        function scaleDataPoints(){
-            var maxX = -Infinity;
-            var minX = Infinity;
-            var maxY = -Infinity;
-            var minY = Infinity;
+          var maxVal = -Infinity;
+        function scaleDataPoints() {
 
-            for (let i = 0; i < dataPoints.length; i++) {
-
-
-                if(maxX - minX == 0){
-                    maxX = 1;
-                }
-                //console.log(dataPoints);
-
-                if (dataPoints[i].x > maxX) {
-                    maxX = dataPoints[i].x;
-                }
-                if (dataPoints[i].x < minX) {
-                    minX = dataPoints[i].x;
-                }
-                if(dataPoints[i].y > maxY){
-                    maxY = dataPoints[i].y;
-                }
-                if(dataPoints[i].y < minY){
-                    minY = dataPoints[i].y;
-                }
-
+          for (let i = 0; i < dataPoints.length; i++) {
+            if (
+              Math.abs(dataPoints[i].x) > maxVal ||
+              Math.abs(dataPoints[i].y) > maxVal
+            ) {
+              maxVal = Math.max(dataPoints[i].x, dataPoints[i].y);
             }
+          }
 
-            for (let i = 0; i < dataPoints.length; i++) {
-                dataPoints[i].x = (dataPoints[i].x - minX) / (maxX - minX) * (displayWidth - 20);
-                dataPoints[i].y = (dataPoints[i].y - minX) / (maxX - minX) * (displayHeight - 20);
-            }  
-            console.log(maxX, minX, maxY, minY);
+          for (let i = 0; i < dataPoints.length; i++) {
+            let scaler = Origin.y / (maxVal + 5);
+
+            dataPoints[i].x = dataPoints[i].x * scaler + Origin.y;
+
+            dataPoints[i].y = -dataPoints[i].y * scaler + Origin.y;
+
+            //transform to centre
+            console.log(Origin.x);
+          }
         }
 
         function preprocessing() {
-        
-            scaleDataPoints();
-            console.log(dataPoints)
-            
+          scaleDataPoints();
+          console.log(dataPoints);
 
-            //return [x, y];
-
-        } 
+          //return [x, y];
+        }
 
         function selectDataPoint() {
-            let mouseRadius = 500;
-            //console.log("Mouse pos: " + mouse.x.toFixed(0),  mouse.y.toFixed(0));
-            //console.log(dataPoints.length);
-            var minDistance = Infinity;
-            var selectedDataPoint = null;
+          let mouseRadius = 100;
 
-            for (let i = 0; i < dataPoints.length; i++) {
-                var distance = Math.sqrt(Math.pow(mouse.x - dataPoints[i].x, 2) + Math.pow(mouse.y - dataPoints[i].y, 2));
+          var minDistance = Infinity;
+          var selectedDataPoint = null;
 
-                //find closest data point
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    selectedDataPoint = dataPoints[i];
-                    console.log("Selected data point: ",  dataPoints[i]);
-                }
+          for (let i = 0; i < dataPoints.length; i++) {
+            var distance = Math.sqrt(
+              Math.pow(mouse.x - dataPoints[i].x, 2) +
+                Math.pow(mouse.y - dataPoints[i].y, 2)
+            );
 
-                if(minDistance <= selectedDataPoint.radius + mouseRadius){
-                    c.beginPath();
-                    c.moveTo(selectedDataPoint.x, selectedDataPoint.y);
-                    c.lineTo(mouse.x, mouse.y);
-                    c.stroke();
-                    c.closePath();
-                }
-               
-            //  if (distance <= selectedDataPoint.radius + mouseRadius) {
-            //         //draw line to mouse
-            // }
+            //find closest data point
+            if (distance < minDistance) {
+              minDistance = distance;
+              selectedDataPoint = dataPoints[i];
+              //console.log("Selected data point: ", dataPoints[i]);
+            }
 
-        }}
-        
-        // function dragBalls() {
-        //     let mouseRadius = 1000;
-        //     for (var i = 0; i < particleArray.length; i++) {
-        //         var dx = Math.abs(mouse.x - particleArray[i].x);
-        //         var dy = Math.abs(mouse.y - particleArray[i].y);
-        //         var distance = Math.sqrt(dx * dx + dy * dy);
-        //         if (distance <= particleArray[i].radius + mouseRadius) {
-        //             //draw line to mouse
-        //             c.beginPath();
-        //             c.moveTo(particleArray[i].x, particleArray[i].y);
-        //             c.lineTo(mouse.x, mouse.y);
-        //             c.stroke();
+            //draw stroke to mouse
+            var mousedown = false;
 
-        //             // add force to particle
-        //             var dx = mouse.x - particleArray[i].x;
-        //             var dy = mouse.y - particleArray[i].y;
-        //             var distance = Math.sqrt(dx * dx + dy * dy);
-        //             var minForce = 0.1;
-        //             var maxForce = 100;
-        //             // interpolate force
-        //             var force = (distance - particleArray[i].radius) / (mouseRadius - particleArray[i].radius) * (maxForce - minForce) + minForce;
+            document.body.onmousedown = function () {
+              mousedown = true;
+              if (minDistance <= selectedDataPoint.radius + mouseRadius) {
+                c.beginPath();
+                c.moveTo(selectedDataPoint.x, selectedDataPoint.y);
+                c.lineTo(mouse.x, mouse.y);
+                c.stroke();
+                c.closePath();
+                console.log(selectedDataPoint);
+              }
+            };
+          }
+        }
 
-        //             var angle = Math.atan2(dy, dx);
-        //             var fx = Math.cos(angle) * force;
-        //             var fy = Math.sin(angle) * force;
+        function axisText() {
+          c.font = "20px Arial";
+          c.fillText("Y", Origin.x - 20, 20);
+          c.fillText("X", Origin.x * 2 - 20, Origin.y + 20);
+        }
 
-        //             particleArray[i].ax += fx/particleArray[i].mass;
-        //             particleArray[i].ay += fy/particleArray[i].mass;
-        //         }
-        //     }
-        // }
+        function rutnat() {
+          axisText();
+            var axisAmount = 10;
+          for ( let i = 0; i < axisAmount; i++){
+            
+            let barAxis = Origin.x / axisAmount;
+            
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(Origin.x + i * barAxis, Origin.y);
+            c.lineTo(Origin.x + i * barAxis, Origin.y + 10);
+            c.stroke();
+            c.closePath();
 
-        // var particleArray = [];
+            c.font = "10px Arial";
+            let disp = i * barAxis;
+            c.fillText(disp.toFixed(0)/10 , Origin.x + i * barAxis, Origin.y - 10);
 
-        // function checkSpawn(x, y) {
-        //     for (let i = 0; i < particleArray.length; i++) {
-        //         let particle = particleArray[i];
-        //         if (particle.x + (particle.radius * 2) > x && particle.x - (particle.radius * 2) < x
-        //             && particle.y + (particle.radius * 2) > y && particle.y - (particle.radius * 2) < y) {
-        //             return false;
-        //         }
-        //     }
-        //     return true;
-        // }
+            c.beginPath();
+            c.moveTo(Origin.x - i * barAxis, Origin.y);
+            c.lineTo(Origin.x - i * barAxis, Origin.y + 10);
+            c.stroke();
+            c.closePath();
 
+            c.fillText(-disp.toFixed(0)/10 , Origin.x - i * barAxis, Origin.y - 10);
 
-        // function createParticle() {
-        //     var radius = 50;
-        //     var x = Math.random() * (tfCanvas.width - radius * 2) + radius;
-        //     var y = Math.random() * (tfCanvas.height - radius * 2) + radius;
-        //     while (!checkSpawn(x, y)) {
-        //         x = Math.random() * (tfCanvas.width - radius * 2) + radius;
-        //         y = Math.random() * (tfCanvas.height - radius * 2) + radius;
-        //     }
+            c.beginPath();
+            c.moveTo(Origin.x, Origin.y + i * barAxis);
+            c.lineTo(Origin.x + 10, Origin.y + i * barAxis);
+            c.stroke();
+            c.closePath();
 
+            c.fillText(disp.toFixed(0)/10 , Origin.x - 20, Origin.y- i * barAxis);
+            
+            c.beginPath();
+            c.moveTo(Origin.x, Origin.y - i * barAxis);
+            c.lineTo(Origin.x + 10, Origin.y - i * barAxis);
+            c.stroke();
+            c.closePath();
 
-        //     var color = getNextColor();
-        //     particleArray.push(new Cricle(x, y, radius, color));
-        // }
+            c.fillText(-disp.toFixed(0)/10 , Origin.x - 20, Origin.y + i * barAxis);
+
+            //__________________________________________//
+
+            c.lineWidth = 0.5;
+            c.beginPath();
+            c.moveTo(Origin.x + i * barAxis, 0);
+            c.lineTo(Origin.x + i * barAxis, Origin.y * 2);
+            c.stroke();
+            c.closePath();
+
+        //     c.font = "20px Arial";
+        //   c.fillText("Y", Origin.x + 10, 20);
+        //   c.fillText("X", Origin.x * 2 - 20, Origin.y - 10);
+
+            c.beginPath();
+            c.moveTo(Origin.x - i * barAxis, 0);
+            c.lineTo(Origin.x - i * barAxis, Origin.y * 2);
+            c.stroke();
+            c.closePath();
+
+            c.beginPath();
+            c.moveTo(0, Origin.y + i * barAxis);
+            c.lineTo(Origin.x * 2, Origin.y + i * barAxis);
+            c.stroke();
+            c.closePath();
+            
+            c.beginPath();
+            c.moveTo(0, Origin.y - i * barAxis);
+            c.lineTo(Origin.x * 2, Origin.y - i * barAxis);
+            c.stroke();
+            c.closePath();
+
+          }
+        }
 
         function animate() {
-            //c.clearRect(0, 0, innerWidth * 2, innerHeight * 2);
-            
-            for (var i = 0; i < dataPoints.length; i++) {
-                dataPoints[i].draw();
-            }
-            selectDataPoint();
+          //c.clearRect(0, 0, innerWidth * 2, innerHeight * 2);
+
+          for (var i = 0; i < dataPoints.length; i++) {
+            //dataPoints[i].draw();
+          }
+          selectDataPoint();
         }
-        //var color = getNextColor();
-        // particleArray.push(new Cricle(625, 300, -0.5, 0.5, 0, 0, 50, color));
-        // particleArray.push(new Cricle(300, 600, 2, -2, 0, 0, 50, color));
-
-        // particleArray.push(new Cricle(500, 500, 1, 1, 0, 0, 50, color));
-        // particleArray.push(new Cricle(800, 800, -2, -2, 0, 0, 50, color));
-
         window.setInterval(animate, 1000 / FPS);
-    });
-
+      });
     </script>
 
     <canvas id="simCanvas" width="window.width" height="window.height"></canvas>
+    <div>
+      <input type="file" id="fileInput" accept=".csv" />
+      <button id="dataPointspawn">Spawn Data Points</button>
+    </div>
     <!-- <button id="createParticleBtn" >Spawn a dozen balls</button> -->
-
-</body>
+  </body>
 </html>
