@@ -24,55 +24,17 @@
             z-index: 1;
         }
         button{
-            position: absolute;
-            top: 10px;
-            left: 10px;  
-        }
-        #createParticleBtn{
-            position: absolute;
+            position:static;
             top: 10px;
             left: 10px;  
         }
     </style>
-    <input type="file" id="fileInput" accept=".csv" id="createParticleBtn" />
-    <pre id="output"></pre>
+    <input type="file" id="fileInput" accept=".csv" />
+    <button id="datapointspawn">Spawn Data Points</button>
     <script>
         
-        datapoints = [];
-
-        class DataPoint {
-            constructor(x, y, name) {
-                this.x = x;
-                this.y = y;
-                this.name = name;
-            }
-        }
-
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const content = e.target.result;
-                    let lines = content.trim().split('\n');
-
-                    //seperate on comma and add to datapoints
-                    for (let i = 0; i < lines.length; i++) {
-                        lines[i] = lines[i].split(',');
-                        let dataPoint = new DataPoint(lines[i][0], lines[i][1], lines[i][2]);
-                        datapoints.push(dataPoint);
-                    }
-                };
-                reader.readAsText(file);
-                console.log(datapoints);
-            }
-        });
-
         window.addEventListener('DOMContentLoaded', () => {
         // Define constants
-        const g = 9.81; // acceleration due to gravity (m/s^2)
-        const rho = 1.293; // air density (kg/m^3)
-        const C = 0.43; // drag coefficient for a sphere
 
         window.onresize = function () { location.reload(); }
         const FPS = 60;
@@ -124,196 +86,16 @@
             //console.log(mouse);
 
             if (e.buttons == 1) {
-                dragBallInterval = setInterval(dragBalls, FPS);
+                //dragBallInterval = setInterval(dragBalls, FPS);
             }
         }, false);
 
         window.addEventListener('mouseup', function (e) {
             if (!(e.buttons == 1)) {
-                clearInterval(dragBallInterval);
+                //clearInterval(dragBallInterval);
             }
         }, false);
 
-        //read_csv("data2.csv");
-
-        function dragBalls() {
-            let mouseRadius = 1000;
-            for (var i = 0; i < particleArray.length; i++) {
-                var dx = Math.abs(mouse.x - particleArray[i].x);
-                var dy = Math.abs(mouse.y - particleArray[i].y);
-                var distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance <= particleArray[i].radius + mouseRadius) {
-                    //draw line to mouse
-                    c.beginPath();
-                    c.moveTo(particleArray[i].x, particleArray[i].y);
-                    c.lineTo(mouse.x, mouse.y);
-                    c.stroke();
-
-                    // add force to particle
-                    var dx = mouse.x - particleArray[i].x;
-                    var dy = mouse.y - particleArray[i].y;
-                    var distance = Math.sqrt(dx * dx + dy * dy);
-                    var minForce = 0.1;
-                    var maxForce = 100;
-                    // interpolate force
-                    var force = (distance - particleArray[i].radius) / (mouseRadius - particleArray[i].radius) * (maxForce - minForce) + minForce;
-
-                    var angle = Math.atan2(dy, dx);
-                    var fx = Math.cos(angle) * force;
-                    var fy = Math.sin(angle) * force;
-
-                    particleArray[i].ax += fx/particleArray[i].mass;
-                    particleArray[i].ay += fy/particleArray[i].mass;
-                }
-            }
-        }
-
-        function Cricle(x, y, vx, vy, ax, ay, radius, color) {
-            this.x = x;
-            this.y = y;
-            this.vx = vx;
-            this.vy = vy;
-            this.ax = ax;
-            this.ay = ay;
-            this.radius = radius;
-            this.color = color;
-            this.eor = 0.8; // coefficient of restitution between particles
-            this.eorWall = 0.9; // coefficient of restitution between particle and wall
-            this.mass = 0.5; // mass (kg) of the particle
-
-            this.draw = function () {
-                c.beginPath();
-                c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                c.fillStyle = hexToRgb(this.color);
-                c.fill();
-                c.stroke();
-            }
-
-            this.update = function () {
-                this.draw();
-            }
-
-            this.moveCircle = function () {
-                // Calculate drag force
-                let F_drag_x, F_drag_y, v_mag_x, v_mag_y, scaled_r;
-
-                v_mag_x = this.vx ** 2;
-                v_mag_y = this.vy ** 2; 
-
-                //scale the radius
-                scaled_r = this.radius * 0.0001;
-
-                F_drag_x = -0.5 * rho * (Math.PI * (scaled_r ** 2)) * C * Math.sign(this.vx) * v_mag_x;
-                F_drag_y = -0.5 * rho * (Math.PI * (scaled_r ** 2)) * C * Math.sign(this.vy) * v_mag_y;
-
-                // += since we keep the friction from the last iteration
-                this.ax += (F_drag_x / this.mass);
-                this.ay += (g + (F_drag_y / this.mass));
-
-                // Update velocity
-                this.vx += this.ax * h;
-                this.vy += this.ay * h;
-
-                // Update position
-                this.x += this.vx * h;
-                this.y += this.vy * h;
-                // Reset acceleration each iteration
-                this.ax = 0;
-                this.ay = 0;
-
-                this.bounce();
-            }
-
-            this.bounce = function () {
-                if (this.x + this.radius >= tfCanvas.width) { // höger
-                    this.x = tfCanvas.width - this.radius;
-                    this.vx = -this.vx * this.eorWall;
-                    let friction = this.getContainerFriction(this.vy);
-                    this.ay = friction/this.mass;
-                }
-                if (this.x - this.radius <= 0) { // vänster
-                    this.x = this.radius;
-                    this.vx = -this.vx * this.eorWall;
-                    let friction = this.getContainerFriction(this.vy);
-                    this.ay = friction/this.mass;
-                }
-                if (this.y + this.radius >= tfCanvas.height) { // ner
-                    this.y = tfCanvas.height - this.radius;
-                    this.vy = -this.vy * this.eorWall;
-                    let friction = this.getContainerFriction(this.vx);
-                    this.ax = friction/this.mass;
-                }
-                if (this.y - this.radius <= 0) { // upp
-                    this.y = this.radius;
-                    this.vy = -this.vy * this.eorWall;
-                    let friction = this.getContainerFriction(this.vx);
-                    this.ax = friction/this.mass;
-                }
-
-                for (var i = 0; i < particleArray.length; i++) {
-                    if (this === particleArray[i]) continue;
-
-                    this.checkCollision(particleArray[i])
-                }
-            }
-
-            this.checkCollision = function (otherCircle) {
-                var dx = this.x - otherCircle.x;
-                var dy = this.y - otherCircle.y;
-                var distance = Math.sqrt(dx ** 2 + dy ** 2);
-
-                if (distance <= this.radius + otherCircle.radius) {
-                    //get normalized direction vector (Normal) from this to otherCircle
-                    let normalizedDx = dx / distance;
-                    let normalizedDy = dy / distance;
-                    //calculate collision point
-                    let collisionPointMidX = this.x - dx / 2;
-                    let collisionPointMidY = this.y - dy / 2;
-
-                    //fix new position with collisionPointMid
-                    this.x = collisionPointMidX + this.radius * normalizedDx;
-                    this.y = collisionPointMidY + this.radius * normalizedDy;
-                    otherCircle.x = collisionPointMidX - otherCircle.radius * normalizedDx;
-                    otherCircle.y = collisionPointMidY - otherCircle.radius * normalizedDy;
-
-                    //get tangetial vector to normal vector (90 degrees rotation counterclowise)
-                    let tangentX = -normalizedDy;
-                    let tangentY = normalizedDx;
-
-                    // get velocity in normal and tangent direction
-                    let thisInitialVNormal = this.vx * normalizedDx + this.vy * normalizedDy;
-                    let thisInitialVTangent = this.vx * tangentX + this.vy * tangentY;
-                    let otherInitialVNormal = otherCircle.vx * normalizedDx + otherCircle.vy * normalizedDy;
-                    let otherInitialVTangent = otherCircle.vx * tangentX + otherCircle.vy * tangentY;
-
-                    // tangent velocities remain the same
-                    let thisFinalVTangent = thisInitialVTangent;
-                    let otherFinalVTangent = otherInitialVTangent;
-
-                    // calculate the velocities in the normal direction after collision
-                    let thisFinalVNormal = (this.mass * thisInitialVNormal + otherCircle.mass * otherInitialVNormal + otherCircle.mass * otherCircle.eor * (otherInitialVNormal - thisInitialVNormal))/(this.mass+otherCircle.mass);
-                    let otherFinalVNormal = (this.mass * thisInitialVNormal + otherCircle.mass * otherInitialVNormal + this.mass * this.eor * (thisInitialVNormal - otherInitialVNormal))/(this.mass+otherCircle.mass);
-
-                    // set new velocities
-                    this.vx = (thisFinalVNormal * normalizedDx + thisFinalVTangent * tangentX);
-                    this.vy = (thisFinalVNormal * normalizedDy + thisFinalVTangent * tangentY);
-                    otherCircle.vx = (otherFinalVNormal * normalizedDx + otherFinalVTangent * tangentX);
-                    otherCircle.vy = (otherFinalVNormal * normalizedDy + otherFinalVTangent * tangentY);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-
-            this.drawCircleVelocity = function () {
-                c.beginPath();
-                c.moveTo(this.x, this.y);
-                c.lineTo(this.x + this.vx, this.y + this.vy);
-                c.stroke();
-            }
-        }
-
-        var particleArray = [];
         var arrayOfRainbowColors = [
             "ff0000",
             "ffa500",
@@ -331,73 +113,137 @@
             return "rgb(" + r + ", " + g + ", " + b + ")";
         }
 
-        let btn = document.querySelector("#createParticleBtn");
-        btn.addEventListener("click", function () {
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-            createParticle();
-        });
-
         function getNextColor() {
             let color = arrayOfRainbowColors.shift();
             arrayOfRainbowColors.push(color);
             return color;
         }
 
-        function checkSpawn(x, y) {
-            for (let i = 0; i < particleArray.length; i++) {
-                let particle = particleArray[i];
-                if (particle.x + (particle.radius * 2) > x && particle.x - (particle.radius * 2) < x
-                    && particle.y + (particle.radius * 2) > y && particle.y - (particle.radius * 2) < y) {
-                    return false;
-                }
+        datapoints = [];
+        class DataPoint {
+            constructor(x, y, name, radius, color) {
+                this.x = x;
+                this.y = y;
+                this.name = name;
+                this.radius = radius;
+                this.color = color;
             }
-            return true;
+
+            draw = function () {
+                c.beginPath();
+                c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                c.fillStyle = hexToRgb(this.color);
+                c.fill();
+                c.stroke();
+            }
+
+            update = function () {
+                this.draw();
+            }
         }
 
-
-        function createParticle() {
-            var radius = 50;
-            var x = Math.random() * (tfCanvas.width - radius * 2) + radius;
-            var y = Math.random() * (tfCanvas.height - radius * 2) + radius;
-            while (!checkSpawn(x, y)) {
-                x = Math.random() * (tfCanvas.width - radius * 2) + radius;
-                y = Math.random() * (tfCanvas.height - radius * 2) + radius;
+        let btn = document.querySelector("#datapointspawn");
+         btn.addEventListener("click", function () {
+            for (let i = 0; i < datapoints.length; i++) {
+                datapoints[i].draw();
             }
-            // start with random velocity and acceleration
-            var vx = 100 * (Math.random() * 2 - 1);
-            var vy = 100 * (Math.random() * 2 - 1);
-            var ax = 100 * (Math.random() * 2 - 1);
-            var ay = 100 * (Math.random() * 2 - 1) ;
+         });
 
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
             var color = getNextColor();
-            particleArray.push(new Cricle(x, y, vx, vy, ax, ay, radius, color));
-        }
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    let lines = content.trim().split('\n');
+
+                    //seperate on comma and add to datapoints
+                    for (let i = 0; i < lines.length; i++) {
+                        lines[i] = lines[i].split(',');
+                        let dataPoint = new DataPoint(lines[i][0], lines[i][1], lines[i][2], 25, color);
+                        datapoints.push(dataPoint);
+                    }
+                };
+                reader.readAsText(file);
+                console.log(datapoints);
+            }
+        });
+
+
+        // function dragBalls() {
+        //     let mouseRadius = 1000;
+        //     for (var i = 0; i < particleArray.length; i++) {
+        //         var dx = Math.abs(mouse.x - particleArray[i].x);
+        //         var dy = Math.abs(mouse.y - particleArray[i].y);
+        //         var distance = Math.sqrt(dx * dx + dy * dy);
+        //         if (distance <= particleArray[i].radius + mouseRadius) {
+        //             //draw line to mouse
+        //             c.beginPath();
+        //             c.moveTo(particleArray[i].x, particleArray[i].y);
+        //             c.lineTo(mouse.x, mouse.y);
+        //             c.stroke();
+
+        //             // add force to particle
+        //             var dx = mouse.x - particleArray[i].x;
+        //             var dy = mouse.y - particleArray[i].y;
+        //             var distance = Math.sqrt(dx * dx + dy * dy);
+        //             var minForce = 0.1;
+        //             var maxForce = 100;
+        //             // interpolate force
+        //             var force = (distance - particleArray[i].radius) / (mouseRadius - particleArray[i].radius) * (maxForce - minForce) + minForce;
+
+        //             var angle = Math.atan2(dy, dx);
+        //             var fx = Math.cos(angle) * force;
+        //             var fy = Math.sin(angle) * force;
+
+        //             particleArray[i].ax += fx/particleArray[i].mass;
+        //             particleArray[i].ay += fy/particleArray[i].mass;
+        //         }
+        //     }
+        // }
+
+        // var particleArray = [];
+
+        // function checkSpawn(x, y) {
+        //     for (let i = 0; i < particleArray.length; i++) {
+        //         let particle = particleArray[i];
+        //         if (particle.x + (particle.radius * 2) > x && particle.x - (particle.radius * 2) < x
+        //             && particle.y + (particle.radius * 2) > y && particle.y - (particle.radius * 2) < y) {
+        //             return false;
+        //         }
+        //     }
+        //     return true;
+        // }
+
+
+        // function createParticle() {
+        //     var radius = 50;
+        //     var x = Math.random() * (tfCanvas.width - radius * 2) + radius;
+        //     var y = Math.random() * (tfCanvas.height - radius * 2) + radius;
+        //     while (!checkSpawn(x, y)) {
+        //         x = Math.random() * (tfCanvas.width - radius * 2) + radius;
+        //         y = Math.random() * (tfCanvas.height - radius * 2) + radius;
+        //     }
+
+
+        //     var color = getNextColor();
+        //     particleArray.push(new Cricle(x, y, radius, color));
+        // }
 
         function animate() {
-            c.clearRect(0, 0, innerWidth * 2, innerHeight * 2);
+            //c.clearRect(0, 0, innerWidth * 2, innerHeight * 2);
 
-            for (var i = 0; i < particleArray.length; i++) {
-                particleArray[i].moveCircle();
-                particleArray[i].update();
-                particleArray[i].drawCircleVelocity();
+            for (var i = 0; i < datapoints.length; i++) {
+                datapoints[i].draw();
             }
         }
         var color = getNextColor();
-        particleArray.push(new Cricle(625, 300, -0.5, 0.5, 0, 0, 50, color));
-        particleArray.push(new Cricle(300, 600, 2, -2, 0, 0, 50, color));
+        // particleArray.push(new Cricle(625, 300, -0.5, 0.5, 0, 0, 50, color));
+        // particleArray.push(new Cricle(300, 600, 2, -2, 0, 0, 50, color));
 
-        particleArray.push(new Cricle(500, 500, 1, 1, 0, 0, 50, color));
-        particleArray.push(new Cricle(800, 800, -2, -2, 0, 0, 50, color));
+        // particleArray.push(new Cricle(500, 500, 1, 1, 0, 0, 50, color));
+        // particleArray.push(new Cricle(800, 800, -2, -2, 0, 0, 50, color));
 
         window.setInterval(animate, 1000 / FPS);
     });
