@@ -133,22 +133,28 @@
 
             draw = function () {
                 c.beginPath();
-                switch (name) {
-                    case "a":
-                        
+                switch (this.name) {
+                    case "a\r":
+                        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                        c.fillStyle = hexToRgb(this.color);
                         break;
-                    case "b":
-                    
+                    case "b\r":
+                        c.fillRect(this.x, this.y, Math.PI * 6, Math.PI * 6);
+                        c.strokeRect(this.x, this.y, Math.PI * 6, Math.PI * 6);
+                        c.fillStyle = hexToRgb(this.color);
                         break;
-                    case "c":
-
+                    case "c\r":
+                        c.moveTo(this.x, this.y-10);
+                        c.lineTo(this.x -15, this.y+15);
+                        c.lineTo(this.x +15, this.y+15);
+                        c.fillStyle = hexToRgb(this.color);
                         break;
 
                     default:
+                        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                        c.fillStyle = hexToRgb(this.color);
                         break;
                 }
-                c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                c.fillStyle = hexToRgb(this.color);
                 c.fill();
                 c.stroke();
             }
@@ -215,7 +221,6 @@
                 if(dataPoints[i].y < minY){
                     minY = dataPoints[i].y;
                 }
-
 
             }
 
