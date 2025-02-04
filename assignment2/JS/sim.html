@@ -136,26 +136,30 @@
                 switch (this.name) {
                     case "a\r":
                     case "a":
+                    case "foo":
+                        c.fillStyle = hexToRgb("ff0000");
                         c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                        c.fillStyle = hexToRgb(this.color);
                         break;
                     case "b\r":
                     case "b":
+                        case "bar":
+                        c.fillStyle = hexToRgb("ee82ee");
                         c.fillRect(this.x, this.y, Math.PI * 6, Math.PI * 6);
                         c.strokeRect(this.x, this.y, Math.PI * 6, Math.PI * 6);
-                        c.fillStyle = hexToRgb(this.color);
                         break;
                     case "c\r":
                     case "c":
+                    case "baz":
+                        c.fillStyle = hexToRgb("0000ff");
                         c.moveTo(this.x, this.y-10);
                         c.lineTo(this.x -15, this.y+15);
                         c.lineTo(this.x +15, this.y+15);
-                        c.fillStyle = hexToRgb(this.color);
                         break;
 
                     default:
-                        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                        c.fillStyle = hexToRgb(this.color);
+                        //c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                        //c.fillStyle = hexToRgb(this.color);
+                        alert("Invalid data point name: " + this.name);
                         break;
                 }
                 c.fill();
@@ -228,8 +232,8 @@
             }
 
             for (let i = 0; i < dataPoints.length; i++) {
-                dataPoints[i].x = (dataPoints[i].x - minX) / (maxX - minX) * (displayWidth * 2 - 20);
-                dataPoints[i].y = (dataPoints[i].y - minX) / (maxX - minX) * (displayHeight * 2 - 20);
+                dataPoints[i].x = (dataPoints[i].x - minX) / (maxX - minX) * (displayWidth - 20);
+                dataPoints[i].y = (dataPoints[i].y - minX) / (maxX - minX) * (displayHeight - 20);
             }  
             console.log(maxX, minX, maxY, minY);
         }
@@ -243,6 +247,37 @@
             //return [x, y];
 
         } 
+
+        function selectDataPoint() {
+            let mouseRadius = 500;
+            //console.log("Mouse pos: " + mouse.x.toFixed(0),  mouse.y.toFixed(0));
+            //console.log(dataPoints.length);
+            var minDistance = Infinity;
+            var selectedDataPoint = null;
+
+            for (let i = 0; i < dataPoints.length; i++) {
+                var distance = Math.sqrt(Math.pow(mouse.x - dataPoints[i].x, 2) + Math.pow(mouse.y - dataPoints[i].y, 2));
+
+                //find closest data point
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    selectedDataPoint = dataPoints[i];
+                    console.log("Selected data point: ",  dataPoints[i]);
+                }
+
+                if(minDistance <= selectedDataPoint.radius + mouseRadius){
+                    c.beginPath();
+                    c.moveTo(selectedDataPoint.x, selectedDataPoint.y);
+                    c.lineTo(mouse.x, mouse.y);
+                    c.stroke();
+                    c.closePath();
+                }
+               
+            //  if (distance <= selectedDataPoint.radius + mouseRadius) {
+            //         //draw line to mouse
+            // }
+
+        }}
         
         // function dragBalls() {
         //     let mouseRadius = 1000;
@@ -310,15 +345,16 @@
             for (var i = 0; i < dataPoints.length; i++) {
                 dataPoints[i].draw();
             }
+            selectDataPoint();
         }
-        var color = getNextColor();
+        //var color = getNextColor();
         // particleArray.push(new Cricle(625, 300, -0.5, 0.5, 0, 0, 50, color));
         // particleArray.push(new Cricle(300, 600, 2, -2, 0, 0, 50, color));
 
         // particleArray.push(new Cricle(500, 500, 1, 1, 0, 0, 50, color));
         // particleArray.push(new Cricle(800, 800, -2, -2, 0, 0, 50, color));
 
-        //window.setInterval(animate, 1000 / FPS);
+        window.setInterval(animate, 1000 / FPS);
     });
 
     </script>
