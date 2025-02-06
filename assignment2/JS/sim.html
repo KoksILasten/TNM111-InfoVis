@@ -32,6 +32,7 @@
     </style>
 
     <script>
+      //WARNING this code actually sucks sori :(
       window.addEventListener("DOMContentLoaded", () => {
         // Define constants
 
@@ -58,15 +59,34 @@
         // define mouse
         var mouse = { x: 0, y: 0 };
 
-        c.lineWidth = 4;
-        c.moveTo(0, Origin.x);
-        c.lineTo(Origin.y * 2, Origin.y);
-        c.stroke();
+        function drawAxis(x, y) {
+          c.lineWidth = 2;
 
-        c.moveTo(Origin.y, 0);
-        c.lineTo(Origin.x, Origin.x * 2);
-        c.stroke();
-        c.lineWidth = 0.5;
+          //y-axis
+          c.moveTo(x, 0);
+          c.lineTo(x, displayHeight);
+          c.stroke();
+
+          //x-axis
+          c.moveTo(0, y);
+          c.lineTo(displayWidth, y);
+          c.stroke();
+          c.lineWidth = 0.5;
+        }
+
+        function drawMainAxis() {
+          c.lineWidth = 4;
+          c.moveTo(0, Origin.x);
+          c.lineTo(Origin.y * 2, Origin.y);
+          c.stroke();
+
+          c.moveTo(Origin.y, 0);
+          c.lineTo(Origin.x, Origin.x * 2);
+          c.stroke();
+          c.lineWidth = 0.5;
+
+          rutnat();
+        }
 
         function getMousePos(canvas, evt) {
           var rect = canvas.getBoundingClientRect();
@@ -83,23 +103,6 @@
 
             mouse.x = mousePos.x * scale;
             mouse.y = mousePos.y * scale;
-          },
-          false
-        );
-
-        window.addEventListener(
-          "mousedown",
-          function (e) {
-            var mousePos = getMousePos(tfCanvas, e);
-
-            mouse.x = mousePos.x * scale;
-            mouse.y = mousePos.y * scale;
-
-            //console.log(mouse);
-
-            if (e.buttons == 1) {
-              //dragBallInterval = setInterval(dragBalls, FPS);
-            }
           },
           false
         );
@@ -151,17 +154,18 @@
 
           draw = function () {
             c.beginPath();
+            c.lineWidth = 0.5;
             switch (this.name) {
               case "a\r":
               case "a":
               case "foo":
-                c.fillStyle = hexToRgb("ff0000");
+                c.fillStyle = hexToRgb(this.color);
                 c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
                 break;
               case "b\r":
               case "b":
               case "bar":
-                c.fillStyle = hexToRgb("ee82ee");
+                c.fillStyle = hexToRgb(this.color);
                 let offset = 9;
                 c.fillRect(
                   this.x - offset,
@@ -179,7 +183,7 @@
               case "c\r":
               case "c":
               case "baz":
-                c.fillStyle = hexToRgb("0000ff");
+                c.fillStyle = hexToRgb(this.color);
                 c.moveTo(this.x, this.y - 10);
                 c.lineTo(this.x - 15, this.y + 15);
                 c.lineTo(this.x + 15, this.y + 15);
@@ -193,6 +197,7 @@
             }
             c.fill();
             c.stroke();
+            c.closePath();
           };
 
           update = function () {
@@ -202,19 +207,46 @@
 
         let btn = document.querySelector("#dataPointspawn");
         btn.addEventListener("click", function () {
-          for (let i = 0; i < dataPoints.length; i++) {
-            dataPoints[i].draw();
-          }
-
-          rutnat();
-          console.log(Origin.x, Origin.y);
+          clearCanvas();
+          drawDataPoints();
+          drawMainAxis();
+          //console.log(Origin.x, Origin.y);
         });
+
+        function colorSelect(name) {
+          switch (name) {
+            case "a\r":
+            case "a":
+            case "foo":
+              return "ff0000";
+              break;
+            case "b\r":
+            case "b":
+            case "bar":
+              return "ee82ee";
+              break;
+            case "c\r":
+            case "c":
+            case "baz":
+              return "0000ff";
+              break;
+            default:
+              return "000000";
+              break;
+          }
+        }
+
+        var typeNames = [];
+        function readTypeNames(name) {
+          if (!typeNames.includes(name)) {
+            typeNames.push(name);
+          }
+        }
 
         document
           .getElementById("fileInput")
           .addEventListener("change", function (event) {
             const file = event.target.files[0];
-            var color = getNextColor();
             if (file) {
               const reader = new FileReader();
               reader.onload = function (e) {
@@ -224,6 +256,10 @@
                 //seperate on comma and add to dataPoints
                 for (let i = 0; i < lines.length; i++) {
                   lines[i] = lines[i].split(",");
+
+                  let color = colorSelect(lines[i][2]);
+                  readTypeNames(lines[i][2]);
+
                   let dataPoint = new DataPoint(
                     parseFloat(lines[i][0]),
                     parseFloat(lines[i][1]),
@@ -240,9 +276,14 @@
             }
           });
 
-          var maxVal = -Infinity;
-        function scaleDataPoints() {
+        function drawDataPoints() {
+          for (let i = 0; i < dataPoints.length; i++) {
+            dataPoints[i].draw();
+          }
+        }
 
+        var maxVal = -Infinity;
+        function scaleDataPoints() {
           for (let i = 0; i < dataPoints.length; i++) {
             if (
               Math.abs(dataPoints[i].x) > maxVal ||
@@ -250,13 +291,38 @@
             ) {
               maxVal = Math.max(dataPoints[i].x, dataPoints[i].y);
             }
+
+            //find max and min values for x and y respectivly
+            var minX = Infinity,
+              maxX = -Infinity,
+              minY = Infinity,
+              maxY = -Infinity;
+            for (let i = 0; i < dataPoints.length; i++) {
+              if (dataPoints[i].x < minX) minX = dataPoints[i].x;
+              if (dataPoints[i].x > maxX) maxX = dataPoints[i].x;
+              if (dataPoints[i].y < minY) minY = dataPoints[i].y;
+              if (dataPoints[i].y > maxY) maxY = dataPoints[i].y;
+            }
+            console.log(
+              "minX:",
+              minX,
+              "maxX:",
+              maxX,
+              "minY:",
+              minY,
+              "maxY:",
+              maxY
+            );
           }
 
           for (let i = 0; i < dataPoints.length; i++) {
-            let scaler = Origin.y / (maxVal + 5);
+            let scaler = Origin.y / maxVal;
+            let xScaler = maxX - minX;
+            let yScaler = maxY - minY;
+            //dataPoints[i].y = (displayHeight) * (-dataPoints[i].y - (minY)) / yScaler;
+            //dataPoints[i].x = (displayWidth) * (dataPoints[i].x - (minX)) / xScaler;
 
-            dataPoints[i].x = dataPoints[i].x * scaler + Origin.y;
-
+            dataPoints[i].x = dataPoints[i].x * scaler + Origin.x;
             dataPoints[i].y = -dataPoints[i].y * scaler + Origin.y;
 
             //transform to centre
@@ -266,17 +332,75 @@
 
         function preprocessing() {
           scaleDataPoints();
-          console.log(dataPoints);
-
-          //return [x, y];
+          //console.log(dataPoints);
         }
 
-        function selectDataPoint() {
-          let mouseRadius = 100;
+        function recolorDataPoints(target) {
+          //if(targetSelected == false) return;
+          console.log("target: " + target.x + " " + target.y);
+          for (let i = 0; i < dataPoints.length; i++) {
+            //all data points top right becomes red
+            //all data points top left becomes blue
+            //all data points bottom left becomes green
+            //all data points bottom right becomes purple
+            //all points on the same x or y axis as the selected data point becomes yellow
+            //the selected point itself becomes black
 
-          var minDistance = Infinity;
-          var selectedDataPoint = null;
+            //bottom right
+            if (dataPoints[i].x > target.x && dataPoints[i].y > target.y) {
+              dataPoints[i].color = "ff0000";
 
+              //top left
+            } else if (
+              dataPoints[i].x < target.x &&
+              dataPoints[i].y < target.y
+            ) {
+              dataPoints[i].color = "0000ff"; //blue
+
+              //bottom left
+            } else if (
+              dataPoints[i].x < target.x &&
+              dataPoints[i].y > target.y
+            ) {
+              dataPoints[i].color = "008000"; //green
+
+              //top right
+            } else if (
+              dataPoints[i].x > target.x &&
+              dataPoints[i].y < target.y
+            ) {
+              dataPoints[i].color = "ee82ee";
+            } else if (
+              dataPoints[i].x == target.x ||
+              dataPoints[i].y == target.y
+            ) {
+              dataPoints[i].color = "ffff00";
+            } else {
+              dataPoints[i].color = "000000";
+            }
+          }
+          //draw all data points
+          drawDataPoints();
+        } //end recolorDataPoints
+
+        function resetColor() {
+          for (let i = 0; i < dataPoints.length; i++) {
+            dataPoints[i].color = colorSelect(dataPoints[i].name);
+          }
+          drawDataPoints();
+        }
+
+        var targetSelected = false;
+        function houseCleaning() {
+          resetColor();
+          clearCanvas();
+          drawDataPoints();
+        }
+
+        var selectedDataPoint = null;
+        findClosestDataPointtoMouse = function () {
+          //Euclidian distance
+          minDistance = Infinity;
           for (let i = 0; i < dataPoints.length; i++) {
             var distance = Math.sqrt(
               Math.pow(mouse.x - dataPoints[i].x, 2) +
@@ -289,23 +413,133 @@
               selectedDataPoint = dataPoints[i];
               //console.log("Selected data point: ", dataPoints[i]);
             }
-
-            //draw stroke to mouse
-            var mousedown = false;
-
-            document.body.onmousedown = function () {
-              mousedown = true;
-              if (minDistance <= selectedDataPoint.radius + mouseRadius) {
-                c.beginPath();
-                c.moveTo(selectedDataPoint.x, selectedDataPoint.y);
-                c.lineTo(mouse.x, mouse.y);
-                c.stroke();
-                c.closePath();
-                console.log(selectedDataPoint);
-              }
-            };
           }
+
+          return minDistance;
+
+          if (minDistance <= selectedDataPoint.radius + mouseRadius) {
+          }
+        };
+
+        function textOutput() {
+          targetOutput = document.getElementById("targetOutput");
+            targetOutput.innerHTML = "<h1>" +
+              "Selected data point: " +
+              selectedDataPoint.name +
+              "<br>" +
+              "X: " +
+              selectedDataPoint.originalX.toFixed(2) +
+              "<br>" +
+              "Y: " +
+              selectedDataPoint.originalY.toFixed(2) + "</h1>";
         }
+
+        function selectDataPoint() {
+          let mouseRadius = 10;
+          var minDistance = findClosestDataPointtoMouse();
+
+          if (minDistance <= selectedDataPoint.radius + mouseRadius) {
+            drawAxis(selectedDataPoint.x, selectedDataPoint.y);
+
+            if (!targetSelected) {
+              recolorDataPoints(selectedDataPoint);
+              targetSelected = true;
+            } else {
+              houseCleaning();
+              targetSelected = false;
+            }
+
+            //send data to html output
+            textOutput();
+            //console.log(selectedDataPoint);
+          }
+          //};
+        }
+
+        function clearCanvas() {
+          c.lineWidth = 0;
+          c.clearRect(0, 0, tfCanvas.width, tfCanvas.height);
+          drawMainAxis();
+        }
+
+        var neighswitch = false;
+        var distanceType = { distance: 0, index: 0 };
+        var distanceVector = [];
+        function selectNeighbourhood() {
+          //console.log(target);
+          let mouseRadius = 10;
+          let minDistance = findClosestDataPointtoMouse();
+          var target = selectedDataPoint; 
+
+          textOutput();
+          
+          for (let i = 0; i < dataPoints.length; i++) {
+            distance = Math.sqrt(
+              Math.pow(target.x - dataPoints[i].x, 2) +
+              Math.pow(target.y - dataPoints[i].y, 2)
+            );
+            
+            distanceType = { distance: distance, index: i };
+            distanceVector.push(distanceType);
+          }
+          
+          distanceVector.sort((a, b) => a.distance - b.distance);
+          
+          //find the 5 closest data points to the target
+          //remove target from distanceVector array and select the 5 closest data points
+          
+          if (!neighswitch) {
+            console.log(target);
+          if (minDistance <= selectedDataPoint.radius + mouseRadius) {
+          dataPoints[distanceVector[0].index].color = "000000";
+          for (let i = 1; i < 6; i++) {
+            let index = distanceVector[i].index;
+            dataPoints[index].color = "ffff00";
+          drawDataPoints();
+
+            //draw line to target
+            c.beginPath();
+            c.moveTo(target.x, target.y);
+            c.lineTo(dataPoints[index].x, dataPoints[index].y);
+            c.stroke();
+            c.closePath();
+
+        }
+          }
+              neighswitch = true;
+            } else {
+
+              houseCleaning();
+              neighswitch = false;
+            }
+
+          distanceVector = [];
+        }
+
+        window.addEventListener(
+          "mousedown",
+          function (e) {
+            var mousePos = getMousePos(tfCanvas, e);
+            mouse.x = mousePos.x * scale;
+            mouse.y = mousePos.y * scale;
+
+            if (e.buttons == 1) {
+              if (e.ctrlKey) {
+                console.log("Mouse down with CTRL");
+
+                if (dataPoints.length > 0) {
+                  selectNeighbourhood();
+                }
+              } else {
+                //console.log("Mouse down");
+                if (dataPoints.length > 0) {
+                  selectDataPoint();
+                }
+              }
+            }
+          },
+          false
+        );
 
         function axisText() {
           c.font = "20px Arial";
@@ -313,14 +547,42 @@
           c.fillText("X", Origin.x * 2 - 20, Origin.y + 20);
         }
 
+        function legend() {
+          c.font = "20px Arial";
+          c.lineWidth = 4;
+          c.beginPath();
+          c.fillStyle = "grey";
+          c.rect(0, 0, 70, 90);
+          c.fillRect(0, 0, 70, 90);
+          c.stroke();
+          c.closePath();
+          c.lineWidth = 0.5;
+
+          // let color = colorSelect(name);
+          //typeNames[0]
+          if (typeNames.length < 3) return;
+          c.fillStyle = "red";
+
+          c.fillStyle = hexToRgb(colorSelect(typeNames[0]));
+          c.fillText(typeNames[0], 20, 20);
+
+          c.fillStyle = hexToRgb(colorSelect(typeNames[1]));
+          c.fillText(typeNames[1], 20, 50);
+
+          c.fillStyle = hexToRgb(colorSelect(typeNames[2]));
+          c.fillText(typeNames[2], 20, 80);
+        }
+
+
+        //TODO: lös skalningsproblemet med siffrorna på axlarna
         function rutnat() {
-          axisText();
-            var axisAmount = 10;
-          for ( let i = 0; i < axisAmount; i++){
-            
+          var axisAmount = 10;
+
+          c.fillStyle = "red";
+          c.lineWidth = 2;
+          for (let i = 0; i < axisAmount; i++) {
             let barAxis = Origin.x / axisAmount;
-            
-            c.lineWidth = 2;
+
             c.beginPath();
             c.moveTo(Origin.x + i * barAxis, Origin.y);
             c.lineTo(Origin.x + i * barAxis, Origin.y + 10);
@@ -329,7 +591,12 @@
 
             c.font = "10px Arial";
             let disp = i * barAxis;
-            c.fillText(disp.toFixed(0)/10 , Origin.x + i * barAxis, Origin.y - 10);
+            let offset = Origin.x - 5;
+            c.fillText(
+              disp.toFixed(0) / 10,
+              Origin.x + i * barAxis,
+              Origin.y - 10
+            );
 
             c.beginPath();
             c.moveTo(Origin.x - i * barAxis, Origin.y);
@@ -337,7 +604,11 @@
             c.stroke();
             c.closePath();
 
-            c.fillText(-disp.toFixed(0)/10 , Origin.x - i * barAxis, Origin.y - 10);
+            c.fillText(
+              -disp.toFixed(0) / 10,
+              Origin.x - i * barAxis,
+              Origin.y - 10
+            );
 
             c.beginPath();
             c.moveTo(Origin.x, Origin.y + i * barAxis);
@@ -345,15 +616,23 @@
             c.stroke();
             c.closePath();
 
-            c.fillText(disp.toFixed(0)/10 , Origin.x - 20, Origin.y- i * barAxis);
-            
+            c.fillText(
+              disp.toFixed(0) / 10,
+              Origin.x - 20,
+              Origin.y - i * barAxis
+            );
+
             c.beginPath();
             c.moveTo(Origin.x, Origin.y - i * barAxis);
             c.lineTo(Origin.x + 10, Origin.y - i * barAxis);
             c.stroke();
             c.closePath();
 
-            c.fillText(-disp.toFixed(0)/10 , Origin.x - 20, Origin.y + i * barAxis);
+            c.fillText(
+              -disp.toFixed(0) / 10,
+              Origin.x - 20,
+              Origin.y + i * barAxis
+            );
 
             //__________________________________________//
 
@@ -363,10 +642,6 @@
             c.lineTo(Origin.x + i * barAxis, Origin.y * 2);
             c.stroke();
             c.closePath();
-
-        //     c.font = "20px Arial";
-        //   c.fillText("Y", Origin.x + 10, 20);
-        //   c.fillText("X", Origin.x * 2 - 20, Origin.y - 10);
 
             c.beginPath();
             c.moveTo(Origin.x - i * barAxis, 0);
@@ -379,25 +654,19 @@
             c.lineTo(Origin.x * 2, Origin.y + i * barAxis);
             c.stroke();
             c.closePath();
-            
+
+            //top horizontal lines
             c.beginPath();
             c.moveTo(0, Origin.y - i * barAxis);
             c.lineTo(Origin.x * 2, Origin.y - i * barAxis);
             c.stroke();
             c.closePath();
-
           }
+          //add axis numbers and legend text
+          axisText();
+          legend();
         }
-
-        function animate() {
-          //c.clearRect(0, 0, innerWidth * 2, innerHeight * 2);
-
-          for (var i = 0; i < dataPoints.length; i++) {
-            //dataPoints[i].draw();
-          }
-          selectDataPoint();
-        }
-        window.setInterval(animate, 1000 / FPS);
+        //window.setInterval(animate, 1000 / FPS);
       });
     </script>
 
@@ -406,6 +675,10 @@
       <input type="file" id="fileInput" accept=".csv" />
       <button id="dataPointspawn">Spawn Data Points</button>
     </div>
-    <!-- <button id="createParticleBtn" >Spawn a dozen balls</button> -->
+
+    <div id="targetOutput">
+      <p id="outputText"><h1>Data points and simulation output will appear here.</h></p>
+      <br />
+    </div>
   </body>
 </html>
