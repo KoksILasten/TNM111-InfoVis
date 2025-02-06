@@ -316,7 +316,7 @@
           }
 
           for (let i = 0; i < dataPoints.length; i++) {
-            let scaler = Origin.y / maxVal;
+            let scaler = Origin.y / (maxVal + 5);
             let xScaler = maxX - minX;
             let yScaler = maxY - minY;
             //dataPoints[i].y = (displayHeight) * (-dataPoints[i].y - (minY)) / yScaler;
