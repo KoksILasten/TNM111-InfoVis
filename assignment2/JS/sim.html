@@ -14,14 +14,14 @@
       }
       body,
       canvas {
-        border: 0;
+        border: solid;
         margin: 0;
         padding: 0;
       }
       #simCanvas {
         background-color: rgb(255, 255, 255);
-        width: 80vw;
-        height: 80vh;
+        width: 100vw;
+        height: 100vh;
         z-index: 1;
       }
       button {
@@ -46,9 +46,9 @@
 
         // handle canvas size
         //var displayWidth = window.innerWidth;
-        var displayWidth = 1000;
+        var displayWidth = 800;
         //var displayHeight = window.innerHeight;
-        var displayHeight = 1000;
+        var displayHeight = 800;
         var scale = 1;
         tfCanvas.style.width = displayWidth + "px";
         tfCanvas.style.height = displayHeight + "px";
@@ -311,7 +311,7 @@
           let extraScale = 0;
 
           if(getRelevantQuadrants() == 1){
-              Origin = {x: displayWidth * 0.10, y: displayHeight * 0.90};
+              Origin = {x: displayWidth * 0.05, y: displayHeight * 0.95};
               extraScale = 0.6;
             }else{
               Origin = {x: displayWidth/2, y: displayHeight/2};
@@ -475,7 +475,7 @@
               "<br>" +
               "X: " +
               selectedDataPoint.originalX.toFixed(2) +
-              "<br>" +
+              "  " +
               "Y: " +
               selectedDataPoint.originalY.toFixed(2) + "</h1>";
         }
@@ -591,29 +591,47 @@
         }
 
         function legend() {
+          let rQ = getRelevantQuadrants();
+
           c.font = "20px Arial";
           c.lineWidth = 4;
           c.beginPath();
           c.fillStyle = "grey";
-          c.rect(0, 0, 70, 90);
-          c.fillRect(0, 0, 70, 90);
+
+          if(rQ == 1){
+            c.rect(displayWidth - 70, 0, 70, 90);
+            c.fillRect(displayWidth - 70, 0, 70, 90);
+          }else{
+            c.rect(0, 0, 70, 90);
+            c.fillRect(0, 0, 70, 90);
+          }
+
           c.stroke();
           c.closePath();
           c.lineWidth = 0.5;
 
-          // let color = colorSelect(name);
-          //typeNames[0]
           if (typeNames.length < 3) return;
+
           c.fillStyle = "red";
-
           c.fillStyle = hexToRgb(colorSelect(typeNames[0]));
-          c.fillText(typeNames[0], 20, 20);
 
-          c.fillStyle = hexToRgb(colorSelect(typeNames[1]));
-          c.fillText(typeNames[1], 20, 50);
+          if(rQ == 1){
+            c.fillText(typeNames[0], displayWidth-50, 20);
 
-          c.fillStyle = hexToRgb(colorSelect(typeNames[2]));
-          c.fillText(typeNames[2], 20, 80);
+            c.fillStyle = hexToRgb(colorSelect(typeNames[1]));
+            c.fillText(typeNames[1], displayWidth-50, 50);
+
+            c.fillStyle = hexToRgb(colorSelect(typeNames[2]));
+            c.fillText(typeNames[2], displayWidth-50, 80);
+          }else{
+            c.fillText(typeNames[0], 20, 20);
+
+            c.fillStyle = hexToRgb(colorSelect(typeNames[1]));
+            c.fillText(typeNames[1], 20, 50);
+
+            c.fillStyle = hexToRgb(colorSelect(typeNames[2]));
+            c.fillText(typeNames[2], 20, 80);
+          }
         }
 
 
@@ -622,7 +640,7 @@
           var axisAmount = 10;
           c.fillStyle = "red";
 
-          for (let i = 0; i <= axisAmount; i++) {
+          for (let i = 0; i < axisAmount; i++) {
 
             //__________________Axis Tics_____________________//
             let barAxis = (displayWidth - Origin.x) / axisAmount; // Tic interval
@@ -671,7 +689,7 @@
             c.closePath();
 
             // Skip zero for this axis
-            offset = 25;
+            offset = 35;
             if(i != 0){
               c.fillText(
                 -disp.toFixed(2),
