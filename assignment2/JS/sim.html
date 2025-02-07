@@ -159,12 +159,14 @@
               case "a\r":
               case "a":
               case "foo":
+              case "foo\r":
                 c.fillStyle = hexToRgb(this.color);
                 c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
                 break;
               case "b\r":
               case "b":
               case "bar":
+              case "bar\r":
                 c.fillStyle = hexToRgb(this.color);
                 let offset = 9;
                 c.fillRect(
@@ -183,6 +185,7 @@
               case "c\r":
               case "c":
               case "baz":
+              case "baz\r":
                 c.fillStyle = hexToRgb(this.color);
                 c.moveTo(this.x, this.y - 10);
                 c.lineTo(this.x - 15, this.y + 15);
@@ -218,16 +221,19 @@
             case "a\r":
             case "a":
             case "foo":
+            case "foo\r":
               return "ff0000";
               break;
             case "b\r":
             case "b":
             case "bar":
+            case "bar\r":
               return "ee82ee";
               break;
             case "c\r":
             case "c":
             case "baz":
+            case "baz\r":
               return "0000ff";
               break;
             default:
