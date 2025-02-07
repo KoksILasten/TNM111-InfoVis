@@ -20,8 +20,8 @@
       }
       #simCanvas {
         background-color: rgb(255, 255, 255);
-        width: 100vw;
-        height: 100vh;
+        width: 80vw;
+        height: 80vh;
         z-index: 1;
       }
       button {
@@ -56,6 +56,8 @@
         tfCanvas.height = displayHeight * scale;
         var Origin = { x: displayWidth / 2, y: displayHeight / 2 };
 
+        var globalDataScaler = 0;
+
         // define mouse
         var mouse = { x: 0, y: 0 };
 
@@ -76,14 +78,16 @@
 
         function drawMainAxis() {
           c.lineWidth = 4;
-          c.moveTo(0, Origin.x);
-          c.lineTo(Origin.y * 2, Origin.y);
+
+          // y-axis
+          c.moveTo(Origin.x, 0);
+          c.lineTo(Origin.x, displayHeight);
           c.stroke();
 
-          c.moveTo(Origin.y, 0);
-          c.lineTo(Origin.x, Origin.x * 2);
+          // x-axis
+          c.moveTo(0, Origin.y);
+          c.lineTo(displayWidth, Origin.y);
           c.stroke();
-          c.lineWidth = 0.5;
 
           rutnat();
         }
@@ -153,8 +157,8 @@
           }
 
           draw = function () {
-            c.beginPath();
             c.lineWidth = 0.5;
+            c.beginPath();
             switch (this.name) {
               case "a\r":
               case "a":
@@ -187,9 +191,9 @@
               case "baz":
               case "baz\r":
                 c.fillStyle = hexToRgb(this.color);
-                c.moveTo(this.x, this.y - 10);
-                c.lineTo(this.x - 15, this.y + 15);
-                c.lineTo(this.x + 15, this.y + 15);
+                c.moveTo(this.x, this.y - 16);
+                c.lineTo(this.x - 12, this.y + 8);
+                c.lineTo(this.x + 12, this.y + 8);
                 break;
 
               default:
@@ -249,6 +253,19 @@
           }
         }
 
+        function getRelevantQuadrants(){
+          let relevantQuad = null;
+          for(let i = 0; i < dataPoints.length; i++){
+            if(dataPoints[i].originalX < 0 || dataPoints[i].originalY < 0){
+              relevantQuad = 4;
+              return relevantQuad;
+            }else{
+              relevantQuad = 1;
+            }
+          }
+          return relevantQuad;
+        }
+
         document
           .getElementById("fileInput")
           .addEventListener("change", function (event) {
@@ -284,12 +301,23 @@
 
         function drawDataPoints() {
           for (let i = 0; i < dataPoints.length; i++) {
+            c.lineWidth = 0.5;
             dataPoints[i].draw();
           }
         }
 
         var maxVal = -Infinity;
         function scaleDataPoints() {
+          let extraScale = 0;
+
+          if(getRelevantQuadrants() == 1){
+              Origin = {x: displayWidth * 0.10, y: displayHeight * 0.90};
+              extraScale = 0.6;
+            }else{
+              Origin = {x: displayWidth/2, y: displayHeight/2};
+              extraScale = 0.9;
+            }
+
           for (let i = 0; i < dataPoints.length; i++) {
             if (
               Math.abs(dataPoints[i].x) > maxVal ||
@@ -300,9 +328,9 @@
 
             //find max and min values for x and y respectivly
             var minX = Infinity,
-              maxX = -Infinity,
-              minY = Infinity,
-              maxY = -Infinity;
+                  maxX = -Infinity,
+                  minY = Infinity,
+                  maxY = -Infinity;
             for (let i = 0; i < dataPoints.length; i++) {
               if (dataPoints[i].x < minX) minX = dataPoints[i].x;
               if (dataPoints[i].x > maxX) maxX = dataPoints[i].x;
@@ -321,16 +349,28 @@
             );
           }
 
+
+
           for (let i = 0; i < dataPoints.length; i++) {
-            let scaler = Origin.y / (maxVal + 5);
-            let xScaler = maxX - minX;
-            let yScaler = maxY - minY;
+            let scaler = 0;
+            let xScaler = (displayWidth)/(maxX - minX);
+            let yScaler = (displayHeight)/(maxY - minY);
+
+            if((maxX-minX) > (maxY - minY)){
+              scaler = xScaler;
+              console.log("maxX-minX: ", (maxX-minX), " maxY-minY: ", (maxY - minY));
+            }else{
+              scaler = yScaler;
+              console.log("maxX-minX: ", (maxX-minX), " maxY-minY: ", (maxY - minY));
+            }
+
             //dataPoints[i].y = (displayHeight) * (-dataPoints[i].y - (minY)) / yScaler;
             //dataPoints[i].x = (displayWidth) * (dataPoints[i].x - (minX)) / xScaler;
 
-            dataPoints[i].x = dataPoints[i].x * scaler + Origin.x;
-            dataPoints[i].y = -dataPoints[i].y * scaler + Origin.y;
+            dataPoints[i].x = dataPoints[i].x * (scaler*extraScale) + Origin.x;
+            dataPoints[i].y = -dataPoints[i].y * (scaler*extraScale) + Origin.y;
 
+            globalDataScaler = scaler*extraScale;
             //transform to centre
             console.log(Origin.x);
           }
@@ -472,7 +512,6 @@
         var distanceType = { distance: 0, index: 0 };
         var distanceVector = [];
         function selectNeighbourhood() {
-          //console.log(target);
           let mouseRadius = 10;
           let minDistance = findClosestDataPointtoMouse();
           var target = selectedDataPoint; 
@@ -496,29 +535,27 @@
           
           if (!neighswitch) {
             console.log(target);
-          if (minDistance <= selectedDataPoint.radius + mouseRadius) {
-          dataPoints[distanceVector[0].index].color = "000000";
-          for (let i = 1; i < 6; i++) {
-            let index = distanceVector[i].index;
-            dataPoints[index].color = "ffff00";
-          drawDataPoints();
+            if (minDistance <= selectedDataPoint.radius + mouseRadius) {
+              dataPoints[distanceVector[0].index].color = "000000";
+              for (let i = 1; i < 6; i++) {
+                let index = distanceVector[i].index;
+                dataPoints[index].color = "ffff00";
+                drawDataPoints();
 
-            //draw line to target
-            c.beginPath();
-            c.moveTo(target.x, target.y);
-            c.lineTo(dataPoints[index].x, dataPoints[index].y);
-            c.stroke();
-            c.closePath();
+                //draw line to target
+                c.beginPath();
+                c.moveTo(target.x, target.y);
+                c.lineTo(dataPoints[index].x, dataPoints[index].y);
+                c.stroke();
+                c.closePath();
 
-        }
-          }
-              neighswitch = true;
-            } else {
-
+              }
+            }
+            neighswitch = true;
+          } else {
               houseCleaning();
               neighswitch = false;
-            }
-
+          }
           distanceVector = [];
         }
 
@@ -550,7 +587,7 @@
         function axisText() {
           c.font = "20px Arial";
           c.fillText("Y", Origin.x - 20, 20);
-          c.fillText("X", Origin.x * 2 - 20, Origin.y + 20);
+          c.fillText("X",displayWidth - 20, Origin.y + 20);
         }
 
         function legend() {
@@ -583,91 +620,115 @@
         //TODO: lös skalningsproblemet med siffrorna på axlarna
         function rutnat() {
           var axisAmount = 10;
-
           c.fillStyle = "red";
-          c.lineWidth = 2;
-          for (let i = 0; i < axisAmount; i++) {
-            let barAxis = Origin.x / axisAmount;
 
+          for (let i = 0; i <= axisAmount; i++) {
+
+            //__________________Axis Tics_____________________//
+            let barAxis = (displayWidth - Origin.x) / axisAmount; // Tic interval
+            c.lineWidth = 2;
+            // Positive x axis ticks
             c.beginPath();
             c.moveTo(Origin.x + i * barAxis, Origin.y);
             c.lineTo(Origin.x + i * barAxis, Origin.y + 10);
             c.stroke();
             c.closePath();
 
+            let disp = (i * barAxis)/globalDataScaler; 
+            let offset = 20;
             c.font = "10px Arial";
-            let disp = i * barAxis;
-            let offset = Origin.x - 5;
-            c.fillText(
-              disp.toFixed(0) / 10,
-              Origin.x + i * barAxis,
-              Origin.y - 10
-            );
 
+            // Skip zero for this axis
+            if(i != 0){
+              c.fillText(
+                disp.toFixed(2),
+                Origin.x + (i * barAxis) - 5,
+                Origin.y + offset
+              );
+            }
+
+            // Negative x-axis ticks
             c.beginPath();
             c.moveTo(Origin.x - i * barAxis, Origin.y);
             c.lineTo(Origin.x - i * barAxis, Origin.y + 10);
             c.stroke();
             c.closePath();
 
-            c.fillText(
-              -disp.toFixed(0) / 10,
-              Origin.x - i * barAxis,
-              Origin.y - 10
-            );
+            // Skip zero for this axis
+            if( i != 0){
+              c.fillText(
+                -disp.toFixed(2),
+                Origin.x - (i * barAxis) - 5,
+                Origin.y + offset
+              );
+            }
 
+            // Negative y-axis tics
             c.beginPath();
             c.moveTo(Origin.x, Origin.y + i * barAxis);
-            c.lineTo(Origin.x + 10, Origin.y + i * barAxis);
+            c.lineTo(Origin.x - 10, Origin.y + i * barAxis);
             c.stroke();
             c.closePath();
 
-            c.fillText(
-              disp.toFixed(0) / 10,
-              Origin.x - 20,
-              Origin.y - i * barAxis
-            );
+            // Skip zero for this axis
+            offset = 25;
+            if(i != 0){
+              c.fillText(
+                -disp.toFixed(2),
+                Origin.x - offset,
+                Origin.y + (i * barAxis) + 5
+              );
+            }
 
+            // Positive y-axis tics
             c.beginPath();
             c.moveTo(Origin.x, Origin.y - i * barAxis);
-            c.lineTo(Origin.x + 10, Origin.y - i * barAxis);
+            c.lineTo(Origin.x - 10, Origin.y - i * barAxis);
             c.stroke();
             c.closePath();
 
-            c.fillText(
-              -disp.toFixed(0) / 10,
-              Origin.x - 20,
-              Origin.y + i * barAxis
-            );
+            //Skip zero for this axis
+            if(i != 0){
+              c.fillText(
+                disp.toFixed(2),
+                Origin.x - offset,
+                Origin.y - (i * barAxis) + 5
+              );
+            }
 
-            //__________________________________________//
+            //__________________Grid_____________________//
 
-            c.lineWidth = 0.5;
+            c.lineWidth = 0.2;
+
+            // Parallell vertical lines for positive x half
             c.beginPath();
             c.moveTo(Origin.x + i * barAxis, 0);
-            c.lineTo(Origin.x + i * barAxis, Origin.y * 2);
+            c.lineTo(Origin.x + i * barAxis, displayHeight);
             c.stroke();
             c.closePath();
 
+            // Parallell vertical lines for negative x half
             c.beginPath();
             c.moveTo(Origin.x - i * barAxis, 0);
-            c.lineTo(Origin.x - i * barAxis, Origin.y * 2);
+            c.lineTo(Origin.x - i * barAxis, displayHeight);
             c.stroke();
             c.closePath();
 
+            // Parallell horizontal lines for negative y half
             c.beginPath();
             c.moveTo(0, Origin.y + i * barAxis);
-            c.lineTo(Origin.x * 2, Origin.y + i * barAxis);
+            c.lineTo(displayWidth, Origin.y + i * barAxis);
             c.stroke();
             c.closePath();
 
-            //top horizontal lines
+            // Parallell horizontal lines for positive y half
             c.beginPath();
             c.moveTo(0, Origin.y - i * barAxis);
-            c.lineTo(Origin.x * 2, Origin.y - i * barAxis);
+            c.lineTo(displayWidth, Origin.y - i * barAxis);
             c.stroke();
             c.closePath();
           }
+
           //add axis numbers and legend text
           axisText();
           legend();
