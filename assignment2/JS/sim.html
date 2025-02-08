@@ -57,37 +57,43 @@
         var Origin = { x: displayWidth / 2, y: displayHeight / 2 };
 
         var globalDataScaler = 0;
+        var prevLineWidth = 0;
 
         // define mouse
         var mouse = { x: 0, y: 0 };
 
-        function drawAxis(x, y) {
-          c.lineWidth = 2;
+        //________________Canvas Functions________________//
+        function drawStraightLine(fromX, fromY, toX, toY, lineWidth){
+          // Handle line width
+          prevLineWidth = c.lineWidth;
+          c.lineWidth = lineWidth;
 
-          //y-axis
-          c.moveTo(x, 0);
-          c.lineTo(x, displayHeight);
+          // Draw line
+          c.beginPath();
+          c.moveTo(fromX, fromY);
+          c.lineTo(toX,toY);
           c.stroke();
+          c.closePath();
+
+          // Reset line width
+          c.lineWidth = prevLineWidth;
+        }
+        //_____________________________________________//
+
+        function drawAxis(x, y) {
+          //y-axis
+          drawStraightLine(x, 0, x, displayHeight, 2);
 
           //x-axis
-          c.moveTo(0, y);
-          c.lineTo(displayWidth, y);
-          c.stroke();
-          c.lineWidth = 0.5;
+          drawStraightLine(0, y, displayWidth, y, 2);
         }
 
         function drawMainAxis() {
-          c.lineWidth = 4;
-
           // y-axis
-          c.moveTo(Origin.x, 0);
-          c.lineTo(Origin.x, displayHeight);
-          c.stroke();
+          drawStraightLine(Origin.x, 0, Origin.x, displayHeight, 4);
 
           // x-axis
-          c.moveTo(0, Origin.y);
-          c.lineTo(displayWidth, Origin.y);
-          c.stroke();
+          drawStraightLine(0, Origin.y, displayWidth, Origin.y, 4);
 
           rutnat();
         }
@@ -337,6 +343,7 @@
               if (dataPoints[i].y < minY) minY = dataPoints[i].y;
               if (dataPoints[i].y > maxY) maxY = dataPoints[i].y;
             }
+
             console.log(
               "minX:",
               minX,
@@ -348,8 +355,6 @@
               maxY
             );
           }
-
-
 
           for (let i = 0; i < dataPoints.length; i++) {
             let scaler = 0;
@@ -543,12 +548,7 @@
                 drawDataPoints();
 
                 //draw line to target
-                c.beginPath();
-                c.moveTo(target.x, target.y);
-                c.lineTo(dataPoints[index].x, dataPoints[index].y);
-                c.stroke();
-                c.closePath();
-
+                drawStraightLine(target.x, target.y, dataPoints[index].x, dataPoints[index].y, 0.5);
               }
             }
             neighswitch = true;
@@ -634,8 +634,6 @@
           }
         }
 
-
-        //TODO: lös skalningsproblemet med siffrorna på axlarna
         function rutnat() {
           var axisAmount = 10;
           c.fillStyle = "red";
@@ -643,108 +641,50 @@
           for (let i = 0; i < axisAmount; i++) {
 
             //__________________Axis Tics_____________________//
+
             let barAxis = (displayWidth - Origin.x) / axisAmount; // Tic interval
-            c.lineWidth = 2;
-            // Positive x axis ticks
-            c.beginPath();
-            c.moveTo(Origin.x + i * barAxis, Origin.y);
-            c.lineTo(Origin.x + i * barAxis, Origin.y + 10);
-            c.stroke();
-            c.closePath();
 
             let disp = (i * barAxis)/globalDataScaler; 
-            let offset = 20;
             c.font = "10px Arial";
 
-            // Skip zero for this axis
+            // Skip zeros
             if(i != 0){
-              c.fillText(
-                disp.toFixed(2),
-                Origin.x + (i * barAxis) - 5,
-                Origin.y + offset
-              );
+              // Positive and negative x values
+              let offset = 20;
+              c.fillText(disp.toFixed(2),Origin.x + (i * barAxis) - 5, Origin.y + offset);
+              c.fillText(-disp.toFixed(2),Origin.x - (i * barAxis) - 5,Origin.y + offset);
+
+              // Positive and negative y values
+              offset = 35;
+              c.fillText(-disp.toFixed(2),Origin.x - offset,Origin.y + (i * barAxis) + 5);
+              c.fillText(disp.toFixed(2),Origin.x - offset,Origin.y - (i * barAxis) + 5);
             }
+
+            // Positive x axis ticks
+            drawStraightLine(Origin.x + i * barAxis, Origin.y,Origin.x + i * barAxis, Origin.y + 10,2);
 
             // Negative x-axis ticks
-            c.beginPath();
-            c.moveTo(Origin.x - i * barAxis, Origin.y);
-            c.lineTo(Origin.x - i * barAxis, Origin.y + 10);
-            c.stroke();
-            c.closePath();
-
-            // Skip zero for this axis
-            if( i != 0){
-              c.fillText(
-                -disp.toFixed(2),
-                Origin.x - (i * barAxis) - 5,
-                Origin.y + offset
-              );
-            }
+            drawStraightLine(Origin.x - i * barAxis, Origin.y,Origin.x - i * barAxis, Origin.y + 10,2);
 
             // Negative y-axis tics
-            c.beginPath();
-            c.moveTo(Origin.x, Origin.y + i * barAxis);
-            c.lineTo(Origin.x - 10, Origin.y + i * barAxis);
-            c.stroke();
-            c.closePath();
-
-            // Skip zero for this axis
-            offset = 35;
-            if(i != 0){
-              c.fillText(
-                -disp.toFixed(2),
-                Origin.x - offset,
-                Origin.y + (i * barAxis) + 5
-              );
-            }
+            drawStraightLine(Origin.x, Origin.y + i * barAxis,Origin.x - 10, Origin.y + i * barAxis,2);
 
             // Positive y-axis tics
-            c.beginPath();
-            c.moveTo(Origin.x, Origin.y - i * barAxis);
-            c.lineTo(Origin.x - 10, Origin.y - i * barAxis);
-            c.stroke();
-            c.closePath();
-
-            //Skip zero for this axis
-            if(i != 0){
-              c.fillText(
-                disp.toFixed(2),
-                Origin.x - offset,
-                Origin.y - (i * barAxis) + 5
-              );
-            }
+            drawStraightLine(Origin.x, Origin.y - i * barAxis,Origin.x - 10, Origin.y - i * barAxis,2);
 
             //__________________Grid_____________________//
 
-            c.lineWidth = 0.2;
-
             // Parallell vertical lines for positive x half
-            c.beginPath();
-            c.moveTo(Origin.x + i * barAxis, 0);
-            c.lineTo(Origin.x + i * barAxis, displayHeight);
-            c.stroke();
-            c.closePath();
+            drawStraightLine(Origin.x + i * barAxis, 0,Origin.x + i * barAxis, displayHeight,0.2);
 
             // Parallell vertical lines for negative x half
-            c.beginPath();
-            c.moveTo(Origin.x - i * barAxis, 0);
-            c.lineTo(Origin.x - i * barAxis, displayHeight);
-            c.stroke();
-            c.closePath();
+            drawStraightLine(Origin.x - i * barAxis, 0,Origin.x - i * barAxis, displayHeight,0.2);
 
             // Parallell horizontal lines for negative y half
-            c.beginPath();
-            c.moveTo(0, Origin.y + i * barAxis);
-            c.lineTo(displayWidth, Origin.y + i * barAxis);
-            c.stroke();
-            c.closePath();
+            drawStraightLine(0, Origin.y + i * barAxis,displayWidth, Origin.y + i * barAxis,0.2);
 
             // Parallell horizontal lines for positive y half
-            c.beginPath();
-            c.moveTo(0, Origin.y - i * barAxis);
-            c.lineTo(displayWidth, Origin.y - i * barAxis);
-            c.stroke();
-            c.closePath();
+            drawStraightLine(0, Origin.y - i * barAxis,displayWidth, Origin.y - i * barAxis,0.2);
           }
 
           //add axis numbers and legend text
