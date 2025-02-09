@@ -9,4 +9,6 @@ The implementation can be ran locally by downloading all relevent files previous
 https://koksilasten.github.io/TNM111-InfoVis/
 
 ## Interaction Controls
-The scatter plot can be interacted with by either left clicking on a point or control+left clicking on a point. This will either show the scatter plot with a new origin being the focused point or the five closest neighbors to the selected point.
+The scatter plot can be interacted with by either left clicking on a point or control+left clicking on a point. This will either show the scatter plot with a new origin being the focused point or the five closest neighbors to the selected point.\
+**Left click => Select point, draw new axis**\
+**Left click + ctrl => Select point, highlight five nearest neighbors**
