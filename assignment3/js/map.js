@@ -50,7 +50,7 @@ function worldMap(data) {
      */
     //Transforming to the specific projection
     // geoTransform takes a stream and returns a stream with x,y coordinates
-    var transform = d3.geoTransform([{point: projectPointsOnMap}]);
+    var transform = d3.geoTransform({point: projectPointsOnMap});
     //projection returns array of x and y coordinates (path)
     var d3path = d3.geoPath().projection(transform);
 
