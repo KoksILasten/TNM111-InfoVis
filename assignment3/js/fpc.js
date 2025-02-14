@@ -47,7 +47,7 @@ function focusPlusContext(data) {
      * Task 1 - Parse date with timeParse to year-month-day
      */
 
-    var timeDate = d3.timeParse("%Y-%m-%d");
+    var parseDate = d3.timeParse("%Y-%m-%d");
     //console.log(timeDate);
     
 
@@ -148,7 +148,7 @@ function focusPlusContext(data) {
       * plot(points,nr,nr) try to use different numbers for the scaling.
       */
 
-     plot(small_points, 3, 3);
+     points.plot(small_points, 2, 2);
 
 
     //<---------------------------------------------------------------------------------------------------->
@@ -165,9 +165,13 @@ function focusPlusContext(data) {
      * Task 10 - Call x and y axis
      */
     focus.append("g")
-    //here..
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+    
     focus.append("g")
-    //here..
+    .attr("class", "axis axis--y")
+    .call(yAxis);
 
     //Add y axis label to the scatter plot
     d3.select(".legend")
@@ -188,6 +192,10 @@ function focusPlusContext(data) {
      */
     selected_dots = dots.selectAll("dot")
         //here..
+        .data(data.features)
+        .enter().append("circle")
+        .attr("class", "dot")
+        .attr("opacity", 0.5) //opacity for the dots
         .filter(function (d) { return d.properties.EQ_PRIMARY != null })
         .attr("cx", function (d) {
             return xScale(parseDate(d.properties.Date));
@@ -200,6 +208,8 @@ function focusPlusContext(data) {
      * Task 12 - Call plot function
      * plot(points,nr,nr) no need to send any integers!
      */
+
+    points.plot(selected_dots);
 
     //<---------------------------------------------------------------------------------------------------->
 
@@ -216,6 +226,8 @@ function focusPlusContext(data) {
             /**
              * Task 13 - Update information in the "tooltip" by calling the tooltip function.
              */
+
+            points.tooltip(d);
 
 
             //Rescale the dots onhover
@@ -272,6 +284,11 @@ function focusPlusContext(data) {
      * The brush function is trying to access things in scatter plot which are not yet
      * implmented if we put the brush before.
      */
+
+    context.append("g")
+    .attr("class", "brush")
+    .call(brush) 
+    .call(brush.move, xScale.range());   
 
     //here..
 
