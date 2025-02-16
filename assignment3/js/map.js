@@ -38,7 +38,7 @@ function worldMap(data) {
      */
 
     function projectPointsOnMap(x,y) {
-        var point = leaflet_map.latLngToLayerPoint(new L.LatLng(x,y));
+        var point = leaflet_map.latLngToLayerPoint(new L.LatLng(y,x));
 
         this.stream.point(point.x, point.y);
     }
