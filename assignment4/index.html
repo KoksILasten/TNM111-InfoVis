@@ -39,11 +39,12 @@
                 width: 20%;
                 height: 100vh;
             }
-            .nodeLinkDiagram{
+            #viewport{
                 background-color: aqua;
                 text-align: center;
                 width: 79%;
-                height: 100vh;
+                height: 100vh - 20px;
+                margin: 20px;
             }
         </style>
 
@@ -57,8 +58,9 @@
 
         <!--HTML elements-->
         <div id="content">
-            <div class="nodeLinkDiagram">
-                <p>node link diagram space</p>
+            <div id="viewport">
+                <p>viewport</p>
+                <!--D3 stuff goes in here-->
             </div>
             <div id="controlPanel">
                 <div class="header">
@@ -66,6 +68,7 @@
                     <p style="margin-top: 2px;">By Magnus Kling (magkl572) and Philip Robertsson (phiro138)</p>
                 </div>
                 <p>control panel</p>
+                <!--control stuff goes in here-->
             </div>
         </div>
         
