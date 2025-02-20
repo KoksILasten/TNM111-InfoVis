@@ -38,13 +38,17 @@
                 text-align: center;
                 width: 20%;
                 height: 100vh;
+                color: azure;
             }
             #viewport{
-                background-color: aqua;
+                background-color: rgb(30, 32, 37);
+                box-shadow: inset 0px 0px 29px -4px rgba(0,0,0,0.75);
+                border-radius: 20px;
                 text-align: center;
                 width: 79%;
                 height: 100vh - 20px;
                 margin: 20px;
+                color: azure;
             }
         </style>
 
@@ -53,7 +57,70 @@
 
         <!--Javascript-->
         <script>
-        
+
+            window.onload = function() {
+                loadJSON();
+            };
+
+            function loadJSON(){
+
+                // Preferably this should be done with a loop through the data folder
+                fetch("./data/starwars-episode-1-interactions-allCharacters.json")
+                    .then(response => response.json())
+                    .then(json => {
+                        var ep1JSON = json;
+                        console.log(ep1JSON);
+                    });
+                
+                fetch("./data/starwars-episode-2-interactions-allCharacters.json")
+                .then(response => response.json())
+                .then(json => {
+                    var ep2JSON = json;
+                    console.log(ep2JSON);
+                });
+            
+                fetch("./data/starwars-episode-3-interactions-allCharacters.json")
+                .then(response => response.json())
+                .then(json => {
+                    var ep3JSON = json;
+                    console.log(ep3JSON);
+                });
+
+                fetch("./data/starwars-episode-4-interactions-allCharacters.json")
+                .then(response => response.json())
+                .then(json => {
+                    var ep4JSON = json;
+                    console.log(ep4JSON);
+                });
+
+                fetch("./data/starwars-episode-5-interactions-allCharacters.json")
+                .then(response => response.json())
+                .then(json => {
+                    var ep5JSON = json;
+                    console.log(ep5JSON);
+                });
+
+                fetch("./data/starwars-episode-6-interactions-allCharacters.json")
+                .then(response => response.json())
+                .then(json => {
+                    var ep6JSON = json;
+                    console.log(ep6JSON);
+                });
+
+                fetch("./data/starwars-episode-7-interactions-allCharacters.json")
+                .then(response => response.json())
+                .then(json => {
+                    var ep7JSON = json;
+                    console.log(ep7JSON);
+                });
+
+                fetch("./data/starwars-full-interactions-allCharacters.json")
+                .then(response => response.json())
+                .then(json => {
+                    var fullJSON = json;
+                    console.log(fullJSON);
+                });
+            }
         </script>
 
         <!--HTML elements-->
