@@ -56,72 +56,7 @@
         <script src="https://d3js.org/d3.v6.min.js"></script>
 
         <!--Javascript-->
-        <script>
-
-            window.onload = function() {
-                loadJSON();
-            };
-
-            function loadJSON(){
-
-                // Preferably this should be done with a loop through the data folder
-                fetch("./data/starwars-episode-1-interactions-allCharacters.json")
-                    .then(response => response.json())
-                    .then(json => {
-                        var ep1JSON = json;
-                        console.log(ep1JSON);
-                    });
-                
-                fetch("./data/starwars-episode-2-interactions-allCharacters.json")
-                .then(response => response.json())
-                .then(json => {
-                    var ep2JSON = json;
-                    console.log(ep2JSON);
-                });
-            
-                fetch("./data/starwars-episode-3-interactions-allCharacters.json")
-                .then(response => response.json())
-                .then(json => {
-                    var ep3JSON = json;
-                    console.log(ep3JSON);
-                });
-
-                fetch("./data/starwars-episode-4-interactions-allCharacters.json")
-                .then(response => response.json())
-                .then(json => {
-                    var ep4JSON = json;
-                    console.log(ep4JSON);
-                });
-
-                fetch("./data/starwars-episode-5-interactions-allCharacters.json")
-                .then(response => response.json())
-                .then(json => {
-                    var ep5JSON = json;
-                    console.log(ep5JSON);
-                });
-
-                fetch("./data/starwars-episode-6-interactions-allCharacters.json")
-                .then(response => response.json())
-                .then(json => {
-                    var ep6JSON = json;
-                    console.log(ep6JSON);
-                });
-
-                fetch("./data/starwars-episode-7-interactions-allCharacters.json")
-                .then(response => response.json())
-                .then(json => {
-                    var ep7JSON = json;
-                    console.log(ep7JSON);
-                });
-
-                fetch("./data/starwars-full-interactions-allCharacters.json")
-                .then(response => response.json())
-                .then(json => {
-                    var fullJSON = json;
-                    console.log(fullJSON);
-                });
-            }
-        </script>
+        <script src="index.js"></script>
 
         <!--HTML elements-->
         <div id="content">
