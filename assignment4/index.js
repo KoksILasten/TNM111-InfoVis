@@ -44,7 +44,7 @@ function d3Setup(){
     d3.select("svg").remove();
     let width = d3.select("#viewport").node().getBoundingClientRect().width;
     let height = d3.select("#viewport").node().getBoundingClientRect().height;
-    height = 800;
+    //height = 800;
     width = 800;
     let margin = 20;
     
