@@ -3,36 +3,26 @@ var selectedData; //used to store the selected data
 
 document.addEventListener("DOMContentLoaded", async function() {
     await loadJSON();
-    selectedData = swfull;
+    if(selectedData == null){
+        selectedData = swfull;
+        d3Setup();
+    }
 
-    let width = d3.select("#viewport").node().getBoundingClientRect().width;
-    let height = d3.select("#viewport").node().getBoundingClientRect().height;
-    height = 800;
-    width = 800;
-    let margin = 20;
-    
-    let scale = d3.scaleLinear()
-    .domain([d3.min(selectedData.nodes, d => d.value), d3.max(selectedData.nodes, d => d.value)])
-    .range([margin, width - margin])
-    .clamp(true);
+    const epSelect = document.querySelector("#ep-select");
 
-    
-    let svg = d3.select("#viewport").append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    // Create the x-axis
-    svg.append("g")
-        .attr("transform", "translate(0," + (height - margin) + ")")
-        .call(d3.axisBottom(scale));
-        
-
-    let simulation = d3.forceSimulation(selectedData.nodes)
-        .force("charge", d3.forceManyBody().strength(-50))
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("link", d3.forceLink().links(selectedData.links))
-        .force("collision", d3.forceCollide().radius(5))
-        .on("tick", tick);
+    epSelect.addEventListener("change", function(event){
+        console.log(event.target.value);
+        if(event.target.value == "swep1"){selectedData = swep1;}
+        if(event.target.value == "swep2"){selectedData = swep2;}
+        if(event.target.value == "swep3"){selectedData = swep3;}
+        if(event.target.value == "swep4"){selectedData = swep4;}
+        if(event.target.value == "swep5"){selectedData = swep5;}
+        if(event.target.value == "swep6"){selectedData = swep6;}
+        if(event.target.value == "swep7"){selectedData = swep7;}
+        if(event.target.value == "swfull"){selectedData = swfull;}
+        console.log(selectedData);
+        d3Setup();
+    });
 
 
     //TODO: En nod flyger iväg fast vi har domain satt
@@ -50,14 +40,52 @@ document.addEventListener("keydown", function(event) {
 
 });
 
+function d3Setup(){
+    d3.select("svg").remove();
+    let width = d3.select("#viewport").node().getBoundingClientRect().width;
+    let height = d3.select("#viewport").node().getBoundingClientRect().height;
+    height = 800;
+    width = 800;
+    let margin = 20;
+    
+    let scale = d3.scaleLinear()
+    .domain([d3.min(selectedData.nodes, d => d.value), d3.max(selectedData.nodes, d => d.value)])
+    .range([margin, width - margin])
+    .clamp(true);
+
+    let svg = d3.select("#viewport").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    // Create the x-axis
+    svg.append("g")
+        .attr("transform", "translate(0," + (height - margin) + ")")
+        .call(d3.axisBottom(scale));
+        
+
+    let simulation = d3.forceSimulation(selectedData.nodes)
+        .force("charge", d3.forceManyBody().strength(-50))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("link", d3.forceLink().links(selectedData.links))
+        .force("collision", d3.forceCollide().radius(5))
+        .on("tick", tick);
+}
+
 function updateNodes(){
+
     // alla selections fungerar likadant dvs de väljer alla noder och går in i datan och skapar cirklar för varje nod om den inte redan finns
     let selection = d3.select("svg")
     .selectAll("circle")
     .data(selectedData.nodes)
     .join("circle")  // Changed .enter().append to .join for better practice
     .attr("r", 5)
-    .attr("fill", "yellow")
+    .attr("fill",  function(d) {
+        // If colour is gray make it slighlty more white to make it easier to make it out from the background 
+        if(d.colour == "#808080"){
+            d.colour = "#cccccc";
+        }
+        return d.colour;
+    })
     .attr("cx", function(d) { return d.x; })
     .attr("cy", function(d) { return d.y; });
 }
@@ -77,8 +105,8 @@ function updateLinks(){
 }
     
 function tick() {
-    updateNodes();
     updateLinks();
+    updateNodes();
 }
 
 

@@ -61,7 +61,6 @@
         <!--HTML elements-->
         <div id="content">
             <div id="viewport">
-                <p>viewport</p>
                 <!--D3 stuff goes in here-->
             </div>
             <div id="controlPanel">
@@ -69,7 +68,19 @@
                     <h1 style="margin: 0;">Information Visualization (TNM111) Assignment 4</h1>
                     <p style="margin-top: 2px;">By Magnus Kling (magkl572) and Philip Robertsson (phiro138)</p>
                 </div>
-                <p>control panel</p>
+
+                <label for="ep-select">Episode:</label>
+                <select name="episodes" id="ep-select">
+                    <option value="swfull">All Episodes</option>
+                    <option value="swep1">Episode I</option>
+                    <option value="swep2">Episode II</option>
+                    <option value="swep3">Episode III</option>
+                    <option value="swep4">Episode IV</option>
+                    <option value="swep5">Episode V</option>
+                    <option value="swep6">Episode VI</option>
+                    <option value="swep7">Episode VII</option>
+                </select>
+
                 <!--control stuff goes in here-->
             </div>
         </div>
