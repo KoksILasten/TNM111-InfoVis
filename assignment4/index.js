@@ -2,6 +2,9 @@ var swep1, swep2, swep3, swep4, swep5, swep6, swep7, swfull;
 var selectedData; //used to store the selected data
 var width, height;
 
+//create commando to clear the graph
+
+
 document.addEventListener("DOMContentLoaded", async function () {
   await loadJSON();
   if (selectedData == null) {
@@ -12,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   const epSelect = document.querySelector("#ep-select");
 
   epSelect.addEventListener("change", function (event) {
-    console.log(event.target.value);
+    //console.log(event.target.value);
     switch (event.target.value) {
       case "swep1":
         selectedData = swep1;
@@ -41,14 +44,13 @@ document.addEventListener("DOMContentLoaded", async function () {
       default:
         break;
     }
-    console.log(selectedData);
+    clearGraph();
     d3Setup();
   });
 
-  //TODO: En nod flyger iväg fast vi har domain satt
-  //TODO: En instans till av Node-link med brushing and linking för jämförelse (punkt 2 och 4)
+  //TODO: En instans till av Node-link med brushing and linking för jämförelse (punkt 2 och 4) Nästan klar måste bara highlighta noderna
   //TODO: Kontrollpanel på höger sida ska implementeras (punkt 3)
-  //TODO: Details on demand (punkt 5)
+  //TODO: Details on demand (punkt 5) Gjort endast för noder svårt att kicka på linjer
   // kolla vidare i pdfen för mer
 
   //tick();
@@ -58,6 +60,10 @@ document.addEventListener("keydown", function (event) {
   //reload the page spacebar is pressed
   if (event.keyCode === 32) window.location.reload();
 });
+
+function clearGraph() {
+  d3.selectAll("svg").remove();
+}
 
 function d3Setup() {
   d3.select("svg").remove();
@@ -101,19 +107,17 @@ function createDiagram(svg) {
     .attr("class", "tooltip")
     .style("opacity", 0);
 
-  let simulation = d3
+  const simulation = d3
     .forceSimulation(selectedData.nodes)
-    .force("charge", d3.forceManyBody().strength(-30))
+    .force("charge", d3.forceManyBody().strength(-50))
     .force("center", d3.forceCenter(width / 2, height / 4))
     .force("link", d3.forceLink().links(selectedData.links))
     .force(
       "collision",
-      d3.forceCollide().radius(function (d) {
-        return calcNodeRadius(d);
-      })
-    )
-    .on("tick", tick);
+      d3.forceCollide().radius((d) => calcNodeRadius(d))
+    );
 
+//strecken mellan noderna
   const link = svg
     .append("g")
     .attr("class", "links")
@@ -134,7 +138,11 @@ function createDiagram(svg) {
     })
     .attr("y2", function (d) {
       return d.target.y;
-    });
+    })
+    .on("click", function (event, d) {
+        console.log("Hello Everybody, it's me Markiplier");
+        
+      });
 
   const node = svg
     .append("g")
@@ -159,7 +167,9 @@ function createDiagram(svg) {
     })
     .on("click", function (event, d) {
       d3.selectAll("circle").attr("fill", "blue");
-      d3.select(this).attr("fill", "red");
+      d3.select(d.id).attr("fill", "red");
+      console.log(d);
+      
       highlightNode(d.id);
       showDetails(d);
     })
@@ -197,17 +207,14 @@ function createDiagram(svg) {
       .selectAll("circle")
       .filter((d) => d.id === id)
       .attr("fill", "red");
-    // svg2
-    //   .selectAll("circle")
-    //   .filter((d) => d.id === id)
-    //   .attr("fill", "red");
   }
 
   function showDetails(node) {
-    console.log(node);
+    //console.log(node);
 
+    // Remove existing details
     const controlPanel = d3.select("#controlPanel");
-    controlPanel.selectAll(".details").remove(); // Remove existing details
+    controlPanel.selectAll(".details").remove(); 
 
     controlPanel.append("div").attr("class", "details").html(`
         <h2>${node.name}</h2>
@@ -218,15 +225,14 @@ function createDiagram(svg) {
 
 // scales the node to a radius between 5 and 10 depending on the value of the node
 function calcNodeRadius(node) {
-  //console.log(node.value);
-  let saturate = d3
+    let saturate = d3
     .scaleLinear()
     .domain([
       d3.min(selectedData.nodes, (d) => d.value),
       d3.max(selectedData.nodes, (d) => d.value),
     ])
-    .range([5, 10])
-    .clamp(true);
+    .range([5, 25])
+    .clamp(true);  
 
   return saturate(node.value);
 }
