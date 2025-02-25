@@ -50,6 +50,23 @@
                 margin: 20px;
                 color: azure;
             }
+            .diagram-container {
+                width: 100%;
+                height: 45%;
+                position: relative;
+            }
+            .tooltip {
+                position: absolute;
+                text-align: center;
+                width: 120px;
+                height: auto;
+                padding: 5px;
+                font: 12px sans-serif;
+                background: lightsteelblue;
+                border: 0px;
+                border-radius: 8px;
+                pointer-events: none;
+            }
         </style>
 
         <!--D3 Library-->
@@ -61,7 +78,12 @@
         <!--HTML elements-->
         <div id="content">
             <div id="viewport">
-                <!--D3 stuff goes in here-->
+                <div class="diagram-container" id="diagram1">
+                    <!--D3 stuff goes in here-->
+            </div>
+                <div class="diagram-container" id="diagram2">
+                    <!--D3 stuff goes in here-->
+                </div>
             </div>
             <div id="controlPanel">
                 <div class="header">
