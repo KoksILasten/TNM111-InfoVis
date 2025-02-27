@@ -34,7 +34,7 @@
                 width: 100%;
             }
             #controlPanel{
-                background-color:brown;
+                background-color:#a62b2b;
                 text-align: center;
                 width: 20%;
                 height: 100vh;
@@ -49,11 +49,13 @@
                 height: 100vh - 20px;
                 margin: 20px;
                 color: azure;
+                display:block;
             }
             .diagram-container {
                 width: 100%;
-                height: 45%;
-                position: relative;
+                height: 50%;
+                display: flex; /* Restore display flex to .diagram-container */
+                justify-content: space-around; /* Restore justify-content property */
             }
             .tooltip {
                 position: absolute;
@@ -62,7 +64,8 @@
                 height: auto;
                 padding: 5px;
                 font: 12px sans-serif;
-                background: lightsteelblue;
+                background: #a62b2b;
+                color: white;
                 border: 0px;
                 border-radius: 8px;
                 pointer-events: none;
@@ -102,6 +105,14 @@
                     <option value="swep6">Episode VI</option>
                     <option value="swep7">Episode VII</option>
                 </select>
+
+                <br>
+                <div class="controls">
+                <label for="weightSlider">Edge Weight Filter:</label>
+                <input type="range" id="weightSlider" min="0" max="50" step="1" value="0">
+                <span id="weightLabel">0</span>
+                </div>
+                <br>
 
                 <!--control stuff goes in here-->
             </div>

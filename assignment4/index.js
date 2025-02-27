@@ -61,6 +61,12 @@ document.addEventListener("keydown", function (event) {
   if (event.keyCode === 32) window.location.reload();
 });
 
+document.addEventListener("input", function (event) {
+    d3.select("#weightSlider").on("input", function() {
+      d3.select("#weightLabel").text(this.value);
+    });
+});
+
 function clearGraph() {
   d3.selectAll("svg").remove();
 }
@@ -70,7 +76,7 @@ function d3Setup() {
   width = d3.select("#viewport").node().getBoundingClientRect().width;
   height = d3.select("#viewport").node().getBoundingClientRect().height;
   //height = 800;
-  width = 800;
+  //width = 800;
   let margin = 20;
 
   const svgHeight = height / 2;
@@ -83,6 +89,22 @@ function d3Setup() {
     ])
     .range([margin, width - margin])
     .clamp(true);
+
+    let zoom = d3.zoom()
+      .scaleExtent([1, 5])
+      .translateExtent([[0, 0], [width, height]])
+      .on("zoom", handleZoom);
+
+    function handleZoom(event) {
+      svg1.selectAll('g')
+        .attr("transform", event.transform);
+    }
+
+    function initZoom(){
+      svg1
+        .call(zoom);
+    }
+    
 
   const svg1 = d3
     .select("#diagram1")
@@ -98,6 +120,8 @@ function d3Setup() {
 
   createDiagram(svg1);
   createDiagram(svg2);
+
+  initZoom();
 }
 
 function createDiagram(svg) {
@@ -109,7 +133,7 @@ function createDiagram(svg) {
 
   const simulation = d3
     .forceSimulation(selectedData.nodes)
-    .force("charge", d3.forceManyBody().strength(-50))
+    .force("charge", d3.forceManyBody().strength(-30))
     .force("center", d3.forceCenter(width / 2, height / 4))
     .force("link", d3.forceLink().links(selectedData.links))
     .force(
@@ -125,7 +149,7 @@ function createDiagram(svg) {
     .data(selectedData.links)
     .join("line")
     .attr("stroke", "white")
-    .attr("stroke-width", 0.3)
+    .attr("stroke-width", 0.5)
     .attr("opacity", 0.7)
     .attr("x1", function (d) {
       return d.source.x;
@@ -140,9 +164,21 @@ function createDiagram(svg) {
       return d.target.y;
     })
     .on("click", function (event, d) {
-        console.log("Hello Everybody, it's me Markiplier");
+        showLinkDetails(d);
         
-      });
+      })
+      .on("mouseover", function (event, d) {
+        console.log(d);
+        
+        tooltip.transition().duration(200).style("opacity", 0.9);
+        tooltip
+          .html(d.source.name + "<br/>" + d.target.name + "<br/>" + d.value)
+          .style("left", event.pageX + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseout", function (d) {
+        tooltip.transition().duration(500).style("opacity", 0);
+      })
 
   const node = svg
     .append("g")
@@ -166,12 +202,9 @@ function createDiagram(svg) {
       tooltip.transition().duration(500).style("opacity", 0);
     })
     .on("click", function (event, d) {
-      d3.selectAll("circle").attr("fill", "blue");
-      d3.select(d.id).attr("fill", "red");
-      console.log(d);
       
       highlightNode(d.id);
-      showDetails(d);
+      showNodeDetails(d);
     })
     .attr("r", function (d) {
         return calcNodeRadius(d);
@@ -209,7 +242,7 @@ function createDiagram(svg) {
       .attr("fill", "red");
   }
 
-  function showDetails(node) {
+  function showNodeDetails(node) {
     //console.log(node);
 
     // Remove existing details
@@ -221,6 +254,21 @@ function createDiagram(svg) {
         <p>Value: ${node.value}</p>
       `);
   }
+
+  function showLinkDetails(link) {
+
+    // Remove existing details
+    const controlPanel = d3.select("#controlPanel");
+    controlPanel.selectAll(".details").remove(); 
+
+    controlPanel.append("div").attr("class", "details").html(`
+        <h2>${link.source.name}</h2>
+        <h2>${link.target.name}</h2>
+        <p>Value: ${link.value}</p>
+      `);
+  }
+
+
 }
 
 // scales the node to a radius between 5 and 10 depending on the value of the node
@@ -235,60 +283,6 @@ function calcNodeRadius(node) {
     .clamp(true);  
 
   return saturate(node.value);
-}
-
-function updateNodes() {
-  // alla selections fungerar likadant dvs de väljer alla noder och går in i datan och skapar cirklar för varje nod om den inte redan finns
-  let selection = d3
-    .select("svg")
-    .selectAll("circle")
-    .data(selectedData.nodes)
-    .join("circle") // Changed .enter().append to .join for better practice
-    .attr("r", function (d) {
-      return calcNodeRadius(d);
-    })
-    .attr("fill", function (d) {
-      // If colour is gray make it slighlty more white to make it easier to make it out from the background
-      if (d.colour == "#808080") {
-        d.colour = "#cccccc";
-      }
-      return d.colour;
-    })
-
-    .attr("cx", function (d) {
-      return d.x < width ? d.x : width;
-    })
-    .attr("cy", function (d) {
-      return d.y < height / 2 ? d.y : height / 2;
-    });
-}
-
-function updateLinks() {
-  let selection = d3
-    .select("svg")
-    .selectAll("line")
-    .data(selectedData.links)
-    .join("line")
-    .attr("stroke", "white")
-    .attr("stroke-width", 0.3)
-    .attr("opacity", 0.7)
-    .attr("x1", function (d) {
-      return d.source.x;
-    })
-    .attr("y1", function (d) {
-      return d.source.y;
-    })
-    .attr("x2", function (d) {
-      return d.target.x;
-    })
-    .attr("y2", function (d) {
-      return d.target.y;
-    });
-}
-
-function tick() {
-  updateLinks();
-  updateNodes();
 }
 
 async function loadJSON() {
