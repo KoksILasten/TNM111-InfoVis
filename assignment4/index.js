@@ -80,6 +80,7 @@ function d3Setup() {
   let margin = 20;
 
   const svgHeight = height / 2;
+  const svgWidth = width / 2;
 
   let scale = d3
     .scaleLinear()
@@ -87,12 +88,12 @@ function d3Setup() {
       d3.min(selectedData.nodes, (d) => d.value),
       d3.max(selectedData.nodes, (d) => d.value),
     ])
-    .range([margin, width - margin])
+    .range([margin, svgWidth - margin])
     .clamp(true);
 
     let zoom = d3.zoom()
       .scaleExtent([1, 5])
-      .translateExtent([[0, 0], [width, height]])
+      .translateExtent([[0, 0], [svgWidth, height]])
       .on("zoom", handleZoom);
 
     function handleZoom(event) {
@@ -109,14 +110,14 @@ function d3Setup() {
   const svg1 = d3
     .select("#diagram1")
     .append("svg")
-    .attr("width", width)
-    .attr("height", svgHeight);
+    .attr("width", svgWidth)
+    .attr("height", height);
 
   const svg2 = d3
     .select("#diagram2")
     .append("svg")
-    .attr("width", width)
-    .attr("height", svgHeight);
+    .attr("width", svgWidth)
+    .attr("height", height);
 
   createDiagram(svg1);
   createDiagram(svg2);
@@ -134,7 +135,7 @@ function createDiagram(svg) {
   const simulation = d3
     .forceSimulation(selectedData.nodes)
     .force("charge", d3.forceManyBody().strength(-30))
-    .force("center", d3.forceCenter(width / 2, height / 4))
+    .force("center", d3.forceCenter(width / 4, height / 2))
     .force("link", d3.forceLink().links(selectedData.links))
     .force(
       "collision",
@@ -202,8 +203,7 @@ function createDiagram(svg) {
       tooltip.transition().duration(500).style("opacity", 0);
     })
     .on("click", function (event, d) {
-      
-      highlightNode(d.id);
+      highlightNode(d.index);
       showNodeDetails(d);
     })
     .attr("r", function (d) {
@@ -230,16 +230,26 @@ function createDiagram(svg) {
 
     //keep nodes within the svg
     node
-      .attr("cx", (d) => d.x < width ? d.x : width)
-      .attr("cy", (d) => d.y < height / 2 ? d.y : height / 2);
+      .attr("cx", (d) => d.x < ((width / 2) - 10) ? d.x : ((width / 2) - 10))
+      .attr("cy", (d) => d.y < (height - 10) ? d.y : (height-10));
   }
 
   //fungerar inte korrekt
   function highlightNode(id) {
     d3.selectAll("svg")
       .selectAll("circle")
-      .filter((d) => d.id === id)
+      .filter((d) => d.index === id)
       .attr("fill", "red");
+    d3.selectAll("svg")
+      .selectAll("circle")
+      .filter((d) => d.index !== id)
+      .attr("fill", function (d) {
+        // If colour is gray make it slighlty more white to make it easier to make it out from the background
+        if (d.colour == "#808080") {
+          d.colour = "#cccccc";
+        }
+        return d.colour;
+      });
   }
 
   function showNodeDetails(node) {
@@ -250,8 +260,9 @@ function createDiagram(svg) {
     controlPanel.selectAll(".details").remove(); 
 
     controlPanel.append("div").attr("class", "details").html(`
-        <h2>${node.name}</h2>
-        <p>Value: ${node.value}</p>
+        <p style="margin: 0 0 3px 0">Character Node</p>
+        <h2 style="margin: 0">${node.name}</h2>
+        <p style="margin: 3px 0 0 0">Scenes appeared in: ${node.value}</p>
       `);
   }
 
@@ -262,9 +273,11 @@ function createDiagram(svg) {
     controlPanel.selectAll(".details").remove(); 
 
     controlPanel.append("div").attr("class", "details").html(`
-        <h2>${link.source.name}</h2>
-        <h2>${link.target.name}</h2>
-        <p>Value: ${link.value}</p>
+        <p style="margin: 0 0 3px 0";>Character Link</p>
+        <h2 style="margin: 0">${link.source.name}</h2>
+        <h3 style="margin: 0">&</h3>
+        <h2 style="margin: 0">${link.target.name}</h2>
+        <p style="margin: 3px 0 0 0">Scenes appeared in together: ${link.value}</p>
       `);
   }
 
