@@ -1,6 +1,7 @@
 var swep1, swep2, swep3, swep4, swep5, swep6, swep7, swfull;
 var selectedData; //used to store the selected data
 var width, height;
+var showFiltredNodes = false;
 
 //create commando to clear the graph
 
@@ -9,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadJSON();
   if (selectedData == null) {
     selectedData = swfull;
-    d3Setup();
+    d3Setup(selectedData);
   }
 
   const epSelect = document.querySelector("#ep-select");
@@ -45,33 +46,54 @@ document.addEventListener("DOMContentLoaded", async function () {
         break;
     }
     clearGraph();
-    d3Setup();
+    d3Setup(selectedData);
   });
-
-  //TODO: En instans till av Node-link med brushing and linking för jämförelse (punkt 2 och 4) Nästan klar måste bara highlighta noderna
-  //TODO: Kontrollpanel på höger sida ska implementeras (punkt 3)
-  //TODO: Details on demand (punkt 5) Gjort endast för noder svårt att kicka på linjer
-  // kolla vidare i pdfen för mer
-
-  //tick();
+  setSlider();
 });
+
+function setSlider(){
+  let max = d3.max(selectedData.links, (d) => d.value);
+  let min = d3.min(selectedData.links, (d) => d.value);
+
+  d3.select("#weightSlider")
+  .attr("max", max)
+  .attr("min", min)
+  .attr("value", min);
+  d3.select("#weightLabel").text(min);
+}
 
 document.addEventListener("keydown", function (event) {
   //reload the page spacebar is pressed
   if (event.keyCode === 32) window.location.reload();
 });
 
-document.addEventListener("input", function (event) {
-    d3.select("#weightSlider").on("input", function() {
-      d3.select("#weightLabel").text(this.value);
-    });
-});
+function displayFilteredNodes(){
+  showFiltredNodes = !showFiltredNodes;
+  updateWeight();
+}
+
+//Event listner for the slider
+function updateWeight(){
+  d3.select("#weightLabel").text(d3.select("#weightSlider").node().value);
+
+  let filteredLinks = selectedData.links.filter((d) => d.value >= d3.select("#weightSlider").node().value);
+
+  clearGraph();
+  
+  if(showFiltredNodes){
+    d3Setup({ nodes: selectedData.nodes, links: filteredLinks });
+  } else {
+    let filteredNodes = selectedData.nodes.filter((d) => filteredLinks.some((link) => link.source.index === d.index || link.target.index === d.index));
+    d3Setup({ nodes: filteredNodes, links: filteredLinks });
+  }
+  
+}
 
 function clearGraph() {
   d3.selectAll("svg").remove();
 }
 
-function d3Setup() {
+function d3Setup(data) {
   d3.select("svg").remove();
   width = d3.select("#viewport").node().getBoundingClientRect().width;
   height = d3.select("#viewport").node().getBoundingClientRect().height;
@@ -82,18 +104,9 @@ function d3Setup() {
   const svgHeight = height / 2;
   const svgWidth = width / 2;
 
-  let scale = d3
-    .scaleLinear()
-    .domain([
-      d3.min(selectedData.nodes, (d) => d.value),
-      d3.max(selectedData.nodes, (d) => d.value),
-    ])
-    .range([margin, svgWidth - margin])
-    .clamp(true);
-
     let zoom = d3.zoom()
-      .scaleExtent([1, 5])
-      .translateExtent([[0, 0], [svgWidth, height]])
+      .scaleExtent([.5, 5])
+      .translateExtent([[0, 0], [svgWidth + 50, height + 50]])
       .on("zoom", handleZoom);
 
     function handleZoom(event) {
@@ -119,13 +132,13 @@ function d3Setup() {
     .attr("width", svgWidth)
     .attr("height", height);
 
-  createDiagram(svg1);
-  createDiagram(svg2);
+  createDiagram(svg1, data);
+  createDiagram(svg2, data);
 
   initZoom();
 }
 
-function createDiagram(svg) {
+function createDiagram(svg, data) {
   const tooltip = d3
     .select("body")
     .append("div")
@@ -133,25 +146,25 @@ function createDiagram(svg) {
     .style("opacity", 0);
 
   const simulation = d3
-    .forceSimulation(selectedData.nodes)
-    .force("charge", d3.forceManyBody().strength(-30))
+    .forceSimulation(data.nodes)
+    .force("charge", d3.forceManyBody().strength(-50))
     .force("center", d3.forceCenter(width / 4, height / 2))
-    .force("link", d3.forceLink().links(selectedData.links))
+    .force("link", d3.forceLink().links(data.links).distance(50))
     .force(
       "collision",
       d3.forceCollide().radius((d) => calcNodeRadius(d))
     );
 
-//strecken mellan noderna
+  //strecken mellan noderna
   const link = svg
     .append("g")
     .attr("class", "links")
     .selectAll("line")
-    .data(selectedData.links)
+    .data(data.links)
     .join("line")
-    .attr("stroke", "white")
+    .attr("stroke", "grey")
     .attr("stroke-width", 0.5)
-    .attr("opacity", 0.7)
+    .attr("opacity", 0.5)
     .attr("x1", function (d) {
       return d.source.x;
     })
@@ -186,13 +199,12 @@ function createDiagram(svg) {
     .append("g")
     .attr("class", "nodes")
     .selectAll("circle")
-    .data(selectedData.nodes)
+    .data(data.nodes)
     .enter()
     .append("circle")
     .attr("r", function (d) {
       return calcNodeRadius(d);
     })
-    .attr("fill", "blue")
     .on("mouseover", function (event, d) {
       tooltip.transition().duration(200).style("opacity", 0.9);
       tooltip
@@ -219,9 +231,9 @@ function createDiagram(svg) {
         return d.colour;
       });
 
-  simulation.nodes(selectedData.nodes).on("tick", ticked);
+  simulation.nodes(data.nodes).on("tick", ticked);
 
-  simulation.force("link").links(selectedData.links);
+  simulation.force("link").links(data.links);
 
   function ticked() {
     link
@@ -232,8 +244,8 @@ function createDiagram(svg) {
 
     //keep nodes within the svg
     node
-      .attr("cx", (d) => d.x < ((width / 2) - 10) ? d.x : ((width / 2) - 10))
-      .attr("cy", (d) => d.y < (height - 10) ? d.y : (height-10));
+      .attr("cx", (d) => d.x < ((width * 2) - 10) ? d.x : ((width * 2) - 10))
+      .attr("cy", (d) => d.y < (height * 2 - 10) ? d.y : (height * 2 - 10));
   }
 
   function highlightNode(id) {
@@ -257,7 +269,7 @@ function createDiagram(svg) {
       // Resent possibly highlighted links
       d3.selectAll("svg")
           .selectAll("line")
-          .attr("stroke", "white")
+          .attr("stroke", "grey")
           .attr("stroke-width", 0.5)
   }
 
@@ -292,14 +304,14 @@ function createDiagram(svg) {
       d3.selectAll("svg")
           .selectAll("line")
           .filter((d) => d.index ===  linkId)
-          .attr("stroke", "blue")
+          .attr("stroke", "red")
           .attr("stroke-width", 1.0)
 
       // Resent remaining Links
       d3.selectAll("svg")
           .selectAll("line")
           .filter((d) => d.index !==  linkId)
-          .attr("stroke", "white")
+          .attr("stroke", "grey")
           .attr("stroke-width", 0.5)
   }
 

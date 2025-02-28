@@ -61,7 +61,7 @@
                 justify-content: space-around; /* Restore justify-content property */
             }
             #diagram2{
-                background: rgb(99, 108, 117);
+                background: rgb(36, 36, 36);
                 border-radius: 0 20px 20px 0;
                 box-shadow: inset -5px 0px 29px -4px rgba(0, 0, 0, 0.75);
             }
@@ -124,9 +124,12 @@
 
                 <br>
                 <div class="controls">
-                <label for="weightSlider">Edge Weight Filter:</label>
-                <input type="range" id="weightSlider" min="0" max="50" step="1" value="0">
+                <label for="weightSlider">Edge Weight Threshold:</label>
+                <input type="range" id="weightSlider" min="0" max="150" step="1" value="77" onchange="updateWeight()">
                 <span id="weightLabel">0</span>
+                <br>
+                <input type="checkbox" id="showfiltredNodes" onchange="displayFilteredNodes()">
+                <label for="showfiltredNodes">Show Filtered Nodes</label> <!-- Added label for checkbox -->
                 </div>
                 <br>
 
