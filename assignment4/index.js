@@ -165,11 +165,12 @@ function createDiagram(svg) {
       return d.target.y;
     })
     .on("click", function (event, d) {
+        console.log(d)
+
+        highlightLink(d);
         showLinkDetails(d);
-        
       })
       .on("mouseover", function (event, d) {
-        console.log(d);
         
         tooltip.transition().duration(200).style("opacity", 0.9);
         tooltip
@@ -203,6 +204,7 @@ function createDiagram(svg) {
       tooltip.transition().duration(500).style("opacity", 0);
     })
     .on("click", function (event, d) {
+      console.log(d)
       highlightNode(d.index);
       showNodeDetails(d);
     })
@@ -234,15 +236,50 @@ function createDiagram(svg) {
       .attr("cy", (d) => d.y < (height - 10) ? d.y : (height-10));
   }
 
-  //fungerar inte korrekt
   function highlightNode(id) {
+
+    // Highlight relevant node
     d3.selectAll("svg")
       .selectAll("circle")
       .filter((d) => d.index === id)
       .attr("fill", "red");
+
+    // Resent remaining nodes
     d3.selectAll("svg")
       .selectAll("circle")
       .filter((d) => d.index !== id)
+      .attr("fill", function (d) {
+        // If colour is gray make it slighlty more white to make it easier to make it out from the background
+        if (d.colour == "#808080") {d.colour = "#cccccc";}
+        return d.colour;
+      });
+
+      // Resent possibly highlighted links
+      d3.selectAll("svg")
+          .selectAll("line")
+          .attr("stroke", "white")
+          .attr("stroke-width", 0.5)
+  }
+
+  function highlightLink(d) {
+    let  sourceId = d.source.index;
+    let targetId = d.target.index;
+    let linkId = d.index;
+
+    // Highlight relevant nodes
+    d3.selectAll("svg")
+      .selectAll("circle")
+      .filter(function(d){
+        if(d.index === sourceId || d.index === targetId){return d;}
+      })
+      .attr("fill", "red");
+    
+    // Reset remaining nodes
+    d3.selectAll("svg")
+      .selectAll("circle")
+      .filter(function(d){
+        if(d.index !== sourceId && d.index !== targetId){return d;}
+      })
       .attr("fill", function (d) {
         // If colour is gray make it slighlty more white to make it easier to make it out from the background
         if (d.colour == "#808080") {
@@ -250,6 +287,20 @@ function createDiagram(svg) {
         }
         return d.colour;
       });
+
+      // Highlight Links
+      d3.selectAll("svg")
+          .selectAll("line")
+          .filter((d) => d.index ===  linkId)
+          .attr("stroke", "blue")
+          .attr("stroke-width", 1.0)
+
+      // Resent remaining Links
+      d3.selectAll("svg")
+          .selectAll("line")
+          .filter((d) => d.index !==  linkId)
+          .attr("stroke", "white")
+          .attr("stroke-width", 0.5)
   }
 
   function showNodeDetails(node) {
