@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     clearGraph();
     d3Setup(selectedData);
+    setSlider();
   });
   setSlider();
 });
