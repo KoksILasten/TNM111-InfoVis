@@ -3,9 +3,7 @@ var selectedData; //used to store the selected data
 var width, height;
 var showFiltredNodes = false;
 
-//create commando to clear the graph
-
-
+// Load the JSON files
 document.addEventListener("DOMContentLoaded", async function () {
   await loadJSON();
   if (selectedData == null) {
@@ -51,6 +49,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   setSlider();
 });
 
+// initialize the slider with the min and max values of the data
 function setSlider(){
   let max = d3.max(selectedData.links, (d) => d.value);
   let min = d3.min(selectedData.links, (d) => d.value);
@@ -62,11 +61,7 @@ function setSlider(){
   d3.select("#weightLabel").text(min);
 }
 
-document.addEventListener("keydown", function (event) {
-  //reload the page spacebar is pressed
-  if (event.keyCode === 32) window.location.reload();
-});
-
+//checkbox to show filtered nodes
 function displayFilteredNodes(){
   showFiltredNodes = !showFiltredNodes;
   updateWeight();
@@ -89,16 +84,16 @@ function updateWeight(){
   
 }
 
+//removes all the current svg elements
 function clearGraph() {
   d3.selectAll("svg").remove();
 }
 
+// Setup the d3 diagram
 function d3Setup(data) {
   d3.select("svg").remove();
   width = d3.select("#viewport").node().getBoundingClientRect().width;
   height = d3.select("#viewport").node().getBoundingClientRect().height;
-  //height = 800;
-  //width = 800;
   let margin = 20;
 
   const svgHeight = height / 2;
@@ -138,6 +133,7 @@ function d3Setup(data) {
   initZoom();
 }
 
+// Create the diagram
 function createDiagram(svg, data) {
   const tooltip = d3
     .select("body")
@@ -235,6 +231,7 @@ function createDiagram(svg, data) {
 
   simulation.force("link").links(data.links);
 
+  //update function for the nodes and links
   function ticked() {
     link
       .attr("x1", (d) => d.source.x)
@@ -315,8 +312,8 @@ function createDiagram(svg, data) {
           .attr("stroke-width", 0.5)
   }
 
+  //show the details of clicked node
   function showNodeDetails(node) {
-    //console.log(node);
 
     // Remove existing details
     const controlPanel = d3.select("#controlPanel");
@@ -329,6 +326,7 @@ function createDiagram(svg, data) {
       `);
   }
 
+  //show the details of clicked link
   function showLinkDetails(link) {
 
     // Remove existing details
@@ -347,7 +345,7 @@ function createDiagram(svg, data) {
 
 }
 
-// scales the node to a radius between 5 and 10 depending on the value of the node
+// scales the node to a radius between selected values depending on the value of the node
 function calcNodeRadius(node) {
     let saturate = d3
     .scaleLinear()
@@ -361,6 +359,7 @@ function calcNodeRadius(node) {
   return saturate(node.value);
 }
 
+// Promise to load the JSON files
 async function loadJSON() {
   let links = [
     "./data/starwars-episode-1-interactions-allCharacters.json",
